@@ -1,0 +1,212 @@
+{
+  "comment": "Canonical routing cases for FastAPI + React harness.",
+  "cases": [
+    {
+      "id": "feat-route",
+      "prompt": "Add a new protected route that fetches user profile data and shows a loading state",
+      "expected": [
+        "react-routing",
+        "react-data-fetching",
+        "react-state-management"
+      ]
+    },
+    {
+      "id": "feat-form",
+      "prompt": "Add a new signup form with email validation and async submit error handling",
+      "expected": [
+        "react-forms",
+        "async-error-handling"
+      ]
+    },
+    {
+      "id": "perf-rerender",
+      "prompt": "Investigate why this component rerenders on every keystroke and reduce the rerender cost",
+      "expected": [
+        "react-performance"
+      ]
+    },
+    {
+      "id": "a11y-dialog",
+      "prompt": "Add a confirmation dialog with keyboard navigation and focus management",
+      "expected": [
+        "accessibility"
+      ]
+    },
+    {
+      "id": "sec-xss",
+      "prompt": "Render user-submitted markdown safely without enabling raw HTML injection",
+      "expected": [
+        "frontend-security"
+      ]
+    },
+    {
+      "id": "test-component",
+      "prompt": "Write a Vitest test for this component using Testing Library queries",
+      "expected": [
+        "react-testing",
+        "vitest"
+      ]
+    },
+    {
+      "id": "test-e2e",
+      "prompt": "Write a Playwright test that walks the login flow including OAuth redirect handling",
+      "expected": [
+        "playwright-best-practices"
+      ]
+    },
+    {
+      "id": "fastapi-router",
+      "prompt": "Add a FastAPI APIRouter endpoint for /users/me with a response model",
+      "expected": [
+        "fastapi-best-practices",
+        "pydantic-v2-patterns"
+      ]
+    },
+    {
+      "id": "fastapi-dependency",
+      "prompt": "Add a FastAPI dependency that resolves the current user and enforces an admin scope",
+      "expected": [
+        "fastapi-patterns",
+        "fastapi-security"
+      ]
+    },
+    {
+      "id": "fastapi-testing",
+      "prompt": "Write pytest coverage for this FastAPI route using dependency overrides for the current user",
+      "expected": [
+        "fastapi-testing"
+      ]
+    },
+    {
+      "id": "fastapi-clean-arch",
+      "prompt": "Design a new billing module with routers, services, domain rules, and SQLAlchemy repository adapters",
+      "expected": [
+        "fastapi-clean-architecture"
+      ]
+    },
+    {
+      "id": "openapi-client",
+      "prompt": "Change the FastAPI response schema and regenerate the TypeScript client consumed by React",
+      "expected": [
+        "openapi-contracts",
+        "pydantic-v2-patterns"
+      ]
+    },
+    {
+      "id": "python-style",
+      "prompt": "Review this Python service for typing, Ruff issues, async boundaries, and pytest-friendly design",
+      "expected": [
+        "python-best-practices"
+      ]
+    },
+    {
+      "id": "fastapi-security",
+      "prompt": "Audit this FastAPI JWT and cookie auth flow for CORS, CSRF, RBAC, and secret logging",
+      "expected": [
+        "fastapi-security"
+      ]
+    },
+    {
+      "id": "multi-statement-db",
+      "prompt": "Implement order checkout: insert the order row and decrement stock across two tables atomically",
+      "expected": [
+        "database-transactions",
+        "db-write-protocol"
+      ]
+    },
+    {
+      "id": "single-write",
+      "prompt": "Delete inactive sessions from the database",
+      "expected": [
+        "db-write-protocol"
+      ]
+    },
+    {
+      "id": "bug-failing-test",
+      "prompt": "This test is failing intermittently in CI \u2014 investigate the root cause",
+      "expected": [
+        "bug-investigation"
+      ]
+    },
+    {
+      "id": "plan-feat",
+      "prompt": "Plan a refactor that splits the chat feature into three smaller modules",
+      "expected": [
+        "plan-mode"
+      ]
+    },
+    {
+      "id": "adr-decision",
+      "prompt": "We need to decide between cookie sessions and bearer tokens for the FastAPI API; document the rationale",
+      "expected": [
+        "documentation-and-adrs",
+        "decision-rules"
+      ]
+    },
+    {
+      "id": "async-patterns",
+      "prompt": "Refactor this Promise.all to allow partial failures using Promise.allSettled with AbortSignal",
+      "expected": [
+        "async-error-handling"
+      ]
+    },
+    {
+      "id": "complexity-nested",
+      "prompt": "Flatten the nested conditionals in this function using guard clauses and early returns",
+      "expected": [
+        "cyclomatic-complexity"
+      ]
+    },
+    {
+      "id": "perf-hotpath",
+      "prompt": "Optimize this hot loop for large datasets and high-frequency events",
+      "expected": [
+        "js-performance-patterns"
+      ]
+    },
+    {
+      "id": "refactor-cleanup",
+      "prompt": "Simplify the code I just modified for clarity and consistency, preserving behavior",
+      "expected": [
+        "code-simplifier"
+      ]
+    },
+    {
+      "id": "skill-audit",
+      "prompt": "Review the skill library quality and check for misfiring or overlapping skills",
+      "expected": [
+        "meta-skill-hygiene"
+      ]
+    },
+    {
+      "id": "git-pr",
+      "prompt": "Commit the changes and open a pull request against main",
+      "expected": [
+        "git-workflow"
+      ]
+    },
+    {
+      "id": "quality-gate",
+      "prompt": "Set up CI and pre-commit hooks for backend pytest/Ruff/typecheck, frontend build/tests, and generated-client drift",
+      "expected": [
+        "quality-gates",
+        "openapi-contracts"
+      ]
+    },
+    {
+      "id": "neg-explain-error",
+      "prompt": "What does this error mean: TypeError: Cannot read properties of undefined?",
+      "expected": []
+    },
+    {
+      "id": "neg-translate",
+      "prompt": "Translate this code comment to English: // calcula el total",
+      "expected": []
+    },
+    {
+      "id": "neg-concept",
+      "prompt": "What is dependency injection conceptually?",
+      "expected": []
+    }
+  ]
+}
