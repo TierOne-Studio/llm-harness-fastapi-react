@@ -114,6 +114,7 @@ const failures = [];
 
 for (const c of selected) {
   const prompts = [c.prompt, ...(c.variants ?? [])];
+  const allowed = new Set([...FORCE_FIRE, ...(c.allowed ?? [])]);
   const variantScores = [];
   for (const p of prompts) {
     const returned = await routeOnce(c.id, p);
@@ -126,7 +127,7 @@ for (const c of selected) {
       invalidCalls += 1;
       s = { recall: 0, precision: 0, falsePositives: [], returned: [] };
     } else {
-      s = { ...scoreRouting(c.expected, returned, FORCE_FIRE), returned };
+      s = { ...scoreRouting(c.expected, returned, allowed), returned };
       totalFP += s.falsePositives.length;
     }
     variantScores.push(s);

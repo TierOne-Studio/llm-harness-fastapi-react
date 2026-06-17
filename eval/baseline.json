@@ -5,11 +5,11 @@
       "cases": 29,
       "calls": 29,
       "meanRecall": 1,
-      "falsePositiveRate": 0.379,
-      "meanPrecision": 0.836,
+      "falsePositiveRate": 0,
+      "meanPrecision": 1,
       "perfectRecallRate": 1,
       "paraphraseStability": null,
-      "updatedAt": "2026-06-17T01:56:58.230Z"
+      "updatedAt": "2026-06-17T03:45:55.152Z"
     }
   },
   "adherence": {
@@ -25,7 +25,7 @@
         "routing": 1,
         "contract": 1
       },
-      "updatedAt": "2026-06-17T02:37:12.691Z"
+      "updatedAt": "2026-06-17T05:07:47.631Z"
     }
   }
 }
