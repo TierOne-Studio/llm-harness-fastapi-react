@@ -104,9 +104,9 @@ First line of any code change:
 - `Path: fast — qualifies: <=2 files, single tier/concern, no high-risk surface (P3.3), no contract/schema change, no new dependency.`
 - `Path: full — <disqualifier>` for anything else.
 
-Fast chain: `tdd-workflow` + `repo-conventions` + `design-review`; full chain follows workflows. Escalate with `Path: full — escalated: <reason>` as soon as fast no longer qualifies.
+Fast chain: `tdd-workflow` + `repo-conventions` + `design-review`; full chain follows workflows. Escalate with `Path: full — escalated — <reason>` as soon as fast no longer qualifies.
 
-When fast path escalates mid-task, the next response MUST begin with the exact prefix `Path: full — escalated:` before any explanation.
+When fast path escalates mid-task, the next response MUST begin with the exact prefix `Path: full — escalated` before any explanation.
 
 ## P4 — MANDATORY VERIFICATION
 
@@ -132,7 +132,7 @@ Fix only the named bug; ask before changing a suspicious test; profile before pe
 
 ## P7 — LESSON CAPTURE
 
-After user correction, write feedback memory and output this exact sentence before anything else: `Lesson captured to memory. Want lessons-curator to refine it? (reply 'yes' / 'curate that' / 'skip')`.
+After user correction, write feedback memory and output this exact sentence before anything else: `Lesson captured to memory. Want lessons-curator to refine it?`.
 
 Even if no tool is available to write memory in the current exchange, still output that exact lesson-capture sentence first and do not paraphrase it.
 
