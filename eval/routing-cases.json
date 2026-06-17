@@ -56,10 +56,11 @@
     },
     {
       "id": "fastapi-router",
-      "prompt": "Add a FastAPI APIRouter endpoint for /users/me with a response model",
+      "prompt": "Add a public FastAPI APIRouter endpoint for /status with a response model",
       "expected": [
         "fastapi-best-practices",
-        "pydantic-v2-patterns"
+        "pydantic-v2-patterns",
+        "openapi-contracts"
       ]
     },
     {
@@ -79,7 +80,7 @@
     },
     {
       "id": "fastapi-clean-arch",
-      "prompt": "Design a new billing module with routers, services, domain rules, and SQLAlchemy repository adapters",
+      "prompt": "Implement a new internal billing module with services, domain rules, and SQLAlchemy repository adapters; no public API schema or ADR is in scope",
       "expected": [
         "fastapi-clean-architecture"
       ]
@@ -189,8 +190,7 @@
       "id": "quality-gate",
       "prompt": "Set up CI and pre-commit hooks for backend pytest/Ruff/typecheck, frontend build/tests, and generated-client drift",
       "expected": [
-        "quality-gates",
-        "openapi-contracts"
+        "quality-gates"
       ]
     },
     {

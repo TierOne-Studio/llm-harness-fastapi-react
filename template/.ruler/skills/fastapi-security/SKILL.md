@@ -1,6 +1,6 @@
 ---
 name: fastapi-security
-description: FastAPI API security review: OAuth2/JWT/session cookies, Security/Depends auth dependencies, RBAC and tenant scoping, CORS/CSRF, request validation, SQL injection, secret handling, file uploads, rate limiting, and OpenAPI security schemes. Use for auth, sessions, RBAC, PII, secrets, cross-origin, injection, upload/download, or dependency changes.
+description: FastAPI API security review for backend changes: OAuth2/JWT/session cookies, Security/Depends auth dependencies, RBAC and tenant scoping, CORS/CSRF, request validation, SQL injection, secret handling, file uploads, rate limiting, and OpenAPI security schemes. Use when backend FastAPI code, API auth, server-side authorization, sensitive data, cross-origin policy, injection, upload/download, or security dependencies change. NOT for frontend-only protected routes, ordinary React data fetching, generic ADRs, or non-security route handlers.
 harness:
   tier: backend
   family: backend-fastapi

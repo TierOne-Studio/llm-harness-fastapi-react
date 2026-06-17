@@ -26,7 +26,19 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - run: npm test
+      - name: Check npm token
+        id: npm-token
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN is not configured; skipping npm publish."
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Publish if version is new
+        if: steps.npm-token.outputs.has_token == 'true'
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")

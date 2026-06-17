@@ -1,6 +1,6 @@
 ---
 name: openapi-contracts
-description: OpenAPI contract discipline for FastAPI + React: response models, stable operation IDs, generated TypeScript clients, schema drift gates, breaking-change review, and consumer updates. Use when changing FastAPI route shapes, Pydantic DTOs, generated clients, frontend API hooks, or the FE↔BE seam.
+description: OpenAPI contract discipline for FastAPI + React: response models, stable operation IDs, generated TypeScript clients, schema drift gates, breaking-change review, and consumer updates. Use when a task explicitly changes or verifies FastAPI public route shapes, Pydantic DTOs used in the API, generated clients, frontend API hooks, or the FE↔BE seam. NOT for internal-only backend module architecture with no public API/schema change.
 harness:
   tier: shared
   family: process

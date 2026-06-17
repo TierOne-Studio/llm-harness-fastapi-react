@@ -1,6 +1,6 @@
 ---
 name: frontend-security
-description: Use when reviewing or implementing anything on a React SPA's security surface — XSS sinks (`dangerouslySetInnerHTML`, raw `react-markdown`, third-party HTML), token storage, env-var leakage (`VITE_*`), CSP, dependency audit, postMessage origin checks, URL parameter handling that affects auth state, file upload/download flows, and OAuth/redirect flows. Force-fire on diffs touching auth, tokens, user-supplied HTML, or env vars. NOT for pure visual styling changes with no DOM-injection or auth surface, pure data-shape refactors that don't cross a trust boundary, or backend-only audits.
+description: Use when reviewing or implementing a React SPA security surface — XSS sinks (`dangerouslySetInnerHTML`, raw `react-markdown`, third-party HTML), token storage, env-var leakage (`VITE_*`), CSP, dependency audit, postMessage origin checks, URL parameters that affect auth state, file upload/download flows, OAuth callback handling, or route-guard changes. Force-fire on diffs touching auth, tokens, user-supplied HTML, or env vars. NOT for ordinary Playwright tests of login flows, pure visual styling, data-shape refactors that do not cross a trust boundary, or backend-only audits.
 harness:
   tier: frontend
   family: frontend-platform

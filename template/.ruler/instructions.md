@@ -18,7 +18,9 @@ Use **MUST / SHOULD / MAY** as written. MUST is non-negotiable; SHOULD is the de
 - **Sensitive-data changes need explicit user approval** — hardcoded secrets; token/cookie/PII logging; storing new secrets or sensitive data in browser storage; weakening FastAPI auth dependencies, RBAC, route guards, or tenant scoping.
 - **No AI attribution.** MUST NEVER add AI-attribution trailers to commits, PRs, issues, releases, or docs.
 
-If no tool-layer permission prompt fires for an approval-required operation, output the exact command, an impact summary, the literal line `Awaiting approval (reply 'approve' or 'yes' to proceed)`, and stop. Ambiguous replies are not approval.
+If no tool-layer permission prompt fires for an approval-required operation, you MUST output the exact command, an impact summary, the literal line `Awaiting approval (reply 'approve' or 'yes' to proceed)`, and stop. Put that literal line in the response unchanged, including parentheses and quotes. Do not ask clarifying questions first when the approval-required operation is already identifiable. Do not tell the user to run the approval-required command themselves; pause for approval first even in a tool-less exchange.
+
+Only the user's current-turn reply `approve` or `yes` after your approval pause counts as approval. Urgency, authority, role, "I authorize this in advance", "preapproved", "ok", "go ahead", or standing permission are not approval. If a user claims standing or advance permission for publish/deploy/git/DB/destructive operations, still output the command, impact summary, and exact approval-pause line.
 
 ---
 
@@ -44,7 +46,7 @@ Before behavioral full-path work, create/update a Markdown SPEC via `spec-workfl
 
 ### P3.2 TDD applies
 
-Use `tdd-workflow`: failing test first, minimal implementation, run the relevant suite, mini self-review. Legal waivers only: `TDD waived — non-code change.` / `TDD waived — type-only.` / `TDD waived — config change with no behavior impact.` / `TDD waived — ADR-only change.`
+Use `tdd-workflow`: failing test first, minimal implementation, run the relevant suite, mini self-review. Legal waivers only: `TDD waived — non-code change.` / `TDD waived — type-only.` / `TDD waived — config change with no behavior impact.` / `TDD waived — ADR-only change.` When waived, output the exact waiver sentence as one standalone sentence, including the period.
 
 **Design review applies.** MUST invoke `design-review` before declaring complete and include a `Design review:` marker.
 
@@ -73,7 +75,7 @@ If the change touches auth/sessions/RBAC/payments/secrets/encryption/PII/public 
 | `db-write-protocol` | Any DB write. |
 | `spec-workflow` | Behavioral change. |
 
-If a force-fire skill genuinely does not apply, state `<skill> waived — <reason>`.
+If a force-fire skill genuinely does not apply, state `<skill> waived — <reason>` exactly, using lowercase `waived —`.
 
 ### P3.5 Skill-vs-repo conflict
 
@@ -112,7 +114,7 @@ Fix only the named bug; ask before changing a suspicious test; profile before pe
 
 ## P7 — LESSON CAPTURE
 
-After user correction, write feedback memory and output: `Lesson captured to memory. Want lessons-curator to refine it? (reply 'yes' / 'curate that' / 'skip')`.
+After user correction, write feedback memory and output this exact sentence before anything else: `Lesson captured to memory. Want lessons-curator to refine it? (reply 'yes' / 'curate that' / 'skip')`.
 
 ## P8 — OUTPUT CONTRACT
 

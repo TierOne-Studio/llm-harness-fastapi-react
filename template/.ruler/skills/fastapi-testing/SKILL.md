@@ -1,6 +1,6 @@
 ---
 name: fastapi-testing
-description: FastAPI testing patterns with pytest, TestClient/httpx, dependency overrides, app factories, async tests, database isolation, OpenAPI schema checks, and non-vacuous API assertions. Use when writing or reviewing FastAPI unit, integration, or contract tests.
+description: FastAPI testing patterns with pytest, TestClient/httpx, dependency overrides, app factories, async tests, database isolation, OpenAPI schema checks, and non-vacuous API assertions. Use when the task explicitly writes, reviews, fixes, or designs FastAPI unit, integration, or contract tests. NOT for ordinary route implementation unless test strategy or pytest/httpx coverage is being discussed.
 harness:
   tier: backend
   family: backend-fastapi

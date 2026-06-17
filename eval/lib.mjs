@@ -1,10 +1,12 @@
-import { readdirSync, readFileSync, existsSync, appendFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+let cachedCliEvalCwd;
 
 /**
  * Read the skill catalog (name + description from frontmatter) from the
@@ -75,6 +77,24 @@ async function callApi({ system, messages, model, maxTokens }) {
   return body.content.map((b) => b.text ?? '').join('');
 }
 
+function cliEvalCwd() {
+  if (process.env.EVAL_CLI_CWD) return process.env.EVAL_CLI_CWD;
+  if (cachedCliEvalCwd) return cachedCliEvalCwd;
+
+  const dir = join(tmpdir(), 'llm-harness-fastapi-react-eval-cwd');
+  mkdirSync(dir, { recursive: true });
+  if (!existsSync(join(dir, '.git'))) {
+    const init = spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: dir, encoding: 'utf8' });
+    if (init.status === 0) {
+      writeFileSync(join(dir, 'README.md'), '# Eval scratch repo\n');
+      spawnSync('git', ['add', 'README.md'], { cwd: dir, encoding: 'utf8' });
+      spawnSync('git', ['-c', 'user.email=eval@example.invalid', '-c', 'user.name=Eval Runner', 'commit', '-q', '-m', 'Initial eval scratch commit'], { cwd: dir, encoding: 'utf8' });
+    }
+  }
+  cachedCliEvalCwd = dir;
+  return dir;
+}
+
 async function callCli({ system, prompt, model }) {
   // --tools "" : text-only — without it the model may spend its only turn on a
   // tool call (e.g. trying to Read a skill file the catalog names) and the run
@@ -91,6 +111,10 @@ async function callCli({ system, prompt, model }) {
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
       timeout: 180_000,
+      // Keep live eval answers from being contaminated by this repo's current
+      // dirty state, while still giving Claude Code a normal clean git cwd.
+      // The prompt already contains all harness data needed.
+      cwd: cliEvalCwd(),
     });
     if (res.error) {
       lastErr = new Error(`claude CLI failed: ${res.error.message}`);

@@ -1,6 +1,6 @@
 ---
 name: pydantic-v2-patterns
-description: Pydantic v2 patterns for FastAPI request/response schemas, validation, serialization, model_config, computed fields, DTO separation, settings models, and OpenAPI-safe schema evolution. Use when adding or reviewing Pydantic models or schema validation.
+description: Pydantic v2 patterns for FastAPI request/response schemas, validation, serialization, model_config, computed fields, DTO separation, settings models, and OpenAPI-safe schema evolution. Use when adding or reviewing Pydantic models, request/response DTOs, settings models, or schema validation. NOT for backend architecture discussions that do not mention Pydantic/schema validation.
 harness:
   tier: backend
   family: backend-fastapi
