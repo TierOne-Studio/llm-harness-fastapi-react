@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, appendFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -90,14 +90,11 @@ function cliEvalCwd() {
   if (process.env.EVAL_CLI_CWD) return process.env.EVAL_CLI_CWD;
   if (cachedCliEvalCwd) return cachedCliEvalCwd;
 
-  const dir = join(tmpdir(), 'llm-harness-fastapi-react-eval-cwd');
-  mkdirSync(dir, { recursive: true });
-  if (!existsSync(join(dir, '.git'))) {
-    runGit(['init', '-q', '-b', 'main'], dir);
-    writeFileSync(join(dir, 'README.md'), '# Eval scratch repo\n');
-    runGit(['add', 'README.md'], dir);
-    runGit(['-c', 'user.email=eval@example.invalid', '-c', 'user.name=Eval Runner', 'commit', '-q', '-m', 'Initial eval scratch commit'], dir);
-  }
+  const dir = mkdtempSync(join(tmpdir(), 'llm-harness-fastapi-react-eval-cwd-'));
+  runGit(['init', '-q', '-b', 'main'], dir);
+  writeFileSync(join(dir, 'README.md'), '# Eval scratch repo\n');
+  runGit(['add', 'README.md'], dir);
+  runGit(['-c', 'user.email=eval@example.invalid', '-c', 'user.name=Eval Runner', 'commit', '-q', '-m', 'Initial eval scratch commit'], dir);
   cachedCliEvalCwd = dir;
   return dir;
 }
