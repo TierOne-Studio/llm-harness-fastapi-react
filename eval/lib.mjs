@@ -77,6 +77,15 @@ async function callApi({ system, messages, model, maxTokens }) {
   return body.content.map((b) => b.text ?? '').join('');
 }
 
+function runGit(args, cwd) {
+  const res = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (res.error) throw new Error(`git ${args.join(' ')} failed: ${res.error.message}`);
+  if (res.status !== 0) {
+    throw new Error(`git ${args.join(' ')} failed (${res.status}): ${(res.stderr || res.stdout || '').slice(0, 300)}`);
+  }
+  return res;
+}
+
 function cliEvalCwd() {
   if (process.env.EVAL_CLI_CWD) return process.env.EVAL_CLI_CWD;
   if (cachedCliEvalCwd) return cachedCliEvalCwd;
@@ -84,12 +93,10 @@ function cliEvalCwd() {
   const dir = join(tmpdir(), 'llm-harness-fastapi-react-eval-cwd');
   mkdirSync(dir, { recursive: true });
   if (!existsSync(join(dir, '.git'))) {
-    const init = spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: dir, encoding: 'utf8' });
-    if (init.status === 0) {
-      writeFileSync(join(dir, 'README.md'), '# Eval scratch repo\n');
-      spawnSync('git', ['add', 'README.md'], { cwd: dir, encoding: 'utf8' });
-      spawnSync('git', ['-c', 'user.email=eval@example.invalid', '-c', 'user.name=Eval Runner', 'commit', '-q', '-m', 'Initial eval scratch commit'], { cwd: dir, encoding: 'utf8' });
-    }
+    runGit(['init', '-q', '-b', 'main'], dir);
+    writeFileSync(join(dir, 'README.md'), '# Eval scratch repo\n');
+    runGit(['add', 'README.md'], dir);
+    runGit(['-c', 'user.email=eval@example.invalid', '-c', 'user.name=Eval Runner', 'commit', '-q', '-m', 'Initial eval scratch commit'], dir);
   }
   cachedCliEvalCwd = dir;
   return dir;
