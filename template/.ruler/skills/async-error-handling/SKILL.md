@@ -1,6 +1,6 @@
 ---
 name: async-error-handling
-description: Use when writing or reviewing async code in JavaScript/TypeScript (browser or Python) — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, the few non-React async paths in the frontend, AND FastAPI services, repositories, and external HTTP/DB calls on the backend. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
+description: Use when writing or reviewing async code in JavaScript/TypeScript — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, and the non-React async paths in the frontend. The throw-don't-return-null / catch-at-the-boundary / no-retries philosophy is cross-tier, but native Python asyncio mechanics (event loop, gather/TaskGroup, cancellation, executors) live in async-python-patterns. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
 harness:
   tier: shared
   family: language
@@ -9,7 +9,9 @@ harness:
 
 # Async Error Handling
 
-The most LLM-error-prone area in JS/TS. The default model habits — wrapping every method in try/catch, returning `null` instead of throwing, defensively retrying — actively violate this codebase's fail-fast principle. This applies on both tiers of a fullstack monorepo: the frontend (commonly `apps/web`) and the backend (commonly `apps/api`). This skill encodes the correct patterns and the failure modes to catch.
+The most LLM-error-prone area in JS/TS. The default model habits — wrapping every method in try/catch, returning `null` instead of throwing, defensively retrying — actively violate this codebase's fail-fast principle. This skill encodes the correct JS/TS patterns and the failure modes to catch.
+
+**Scope.** The *error-flow philosophy* below — throw don't return `null`, catch at the boundary not every layer, no retries, fail fast — is cross-tier and worth reading on either side. But the concrete *mechanics* (Promise composition, `AbortSignal`) are JavaScript/TypeScript. Native **Python asyncio** mechanics on the FastAPI backend (event loop discipline, `gather`/`TaskGroup`, `asyncio.timeout`, cancellation, `run_in_executor`) live in **`async-python-patterns`** — the backend snippets here are TS-style pseudocode kept only to show the shared philosophy in a service/repository/boundary shape.
 
 ## When this fires
 
@@ -25,7 +27,8 @@ The most LLM-error-prone area in JS/TS. The default model habits — wrapping ev
 - Single `await` followed by `return` with no error-flow decision.
 - Synchronous control flow.
 - React lifecycle inside `useEffect` cleanup (just don't crash; framework swallows).
-- FastAPI lifecycle hooks (`onModuleInit`, `onApplicationBootstrap`) — these have framework-defined error semantics; just `await` and let it throw.
+- FastAPI lifespan startup/shutdown — let it throw; the app fails to start, which is correct.
+- Native Python asyncio mechanics (`gather`/`TaskGroup`, `asyncio.timeout`, cancellation, offloading blocking calls) — use `async-python-patterns`.
 
 ## Core rules (override LLM defaults)
 
@@ -231,6 +234,7 @@ Backend (commonly `apps/api`):
 
 ## Cross-references
 
+- `async-python-patterns` — the Python asyncio counterpart (event loop, `gather`/`TaskGroup`, cancellation, executors); the right skill for FastAPI/Python backend async.
 - `repo-conventions` § "Error handling" — the error surfaces this codebase uses (FastAPI exception types on the backend; toast, error boundary, query error state on the frontend).
 - `failure-mode-analysis` — `network` and `partial` categories enumerate failure modes this skill helps handle.
 - `react-data-fetching` — TanStack Query patterns and error-state UX (frontend).
