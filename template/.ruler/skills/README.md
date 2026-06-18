@@ -134,7 +134,7 @@ mindmap
 | [fastapi-best-practices](./fastapi-best-practices/SKILL.md) | FastAPI production rules: routers, dependencies, schemas, errors, lifespan, OpenAPI |
 | [fastapi-clean-architecture](./fastapi-clean-architecture/SKILL.md) | Layered FastAPI modules with route/service/domain/infrastructure dependency rule |
 | [fastapi-patterns](./fastapi-patterns/SKILL.md) | Depends/Security, APIRouter, lifespan, middleware, overrides, background tasks |
-| [fastapi-security](./fastapi-security/SKILL.md) | FastAPI auth dependencies, RBAC, CORS/CSRF, injection, secrets, security schemes |
+| [fastapi-security](./fastapi-security/SKILL.md) | FastAPI auth dependencies, RBAC, CORS/CSRF, injection, secrets, rate limiting, security schemes |
 | [fastapi-testing](./fastapi-testing/SKILL.md) | pytest, TestClient/httpx, dependency overrides, DB isolation, OpenAPI checks |
 | [pydantic-v2-patterns](./pydantic-v2-patterns/SKILL.md) | Pydantic v2 schema design, validation, serialization, settings, DTO evolution |
 | [python-best-practices](./python-best-practices/SKILL.md) | Python typing, tooling, async boundaries, pytest, logging, maintainable backend style |
