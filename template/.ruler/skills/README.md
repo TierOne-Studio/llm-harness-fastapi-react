@@ -3,7 +3,7 @@
 <!-- GENERATED FILE — do not edit by hand. Source of truth: each skill's frontmatter
      (harness: tier/family/gist). Regenerate: npm run catalog. CI fails if stale. -->
 
-48 skills in 6 families. The directories are **flat by requirement** — agent runtimes
+49 skills in 6 families. The directories are **flat by requirement** — agent runtimes
 (Claude Code, Codex, Cursor) discover skills as `skills/<name>/SKILL.md`, so grouping
 lives here, not in the filesystem. Depth lives in each skill's `topics/` / `patterns/` /
 `rules/` files, read on demand. Tier routing rules (what loads when) are in
@@ -63,6 +63,7 @@ mindmap
       fastapi-testing
       pydantic-v2-patterns
       python-best-practices
+      python-design-patterns
     🗄️ Data & persistence
       database-transactions
       db-write-protocol
@@ -127,7 +128,7 @@ mindmap
 | [vite](./vite/SKILL.md) | Vite config & build optimization |
 | [vitest](./vitest/SKILL.md) | Vitest config and test API |
 
-## 🏗️ Backend — FastAPI & Python — `apps/api` changes (7)
+## 🏗️ Backend — FastAPI & Python — `apps/api` changes (8)
 
 | Skill | What it gives you |
 |---|---|
@@ -138,6 +139,7 @@ mindmap
 | [fastapi-testing](./fastapi-testing/SKILL.md) | pytest, TestClient/httpx, dependency overrides, DB isolation, OpenAPI checks |
 | [pydantic-v2-patterns](./pydantic-v2-patterns/SKILL.md) | Pydantic v2 schema design, validation, serialization, settings, DTO evolution |
 | [python-best-practices](./python-best-practices/SKILL.md) | Python typing, tooling, async boundaries, pytest, logging, maintainable backend style |
+| [python-design-patterns](./python-design-patterns/SKILL.md) | SOLID/DRY/KISS/SOC, DI, Protocol ports, Pythonic patterns, value objects |
 
 ## 🗄️ Data & persistence (2)
 

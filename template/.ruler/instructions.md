@@ -86,6 +86,7 @@ If the change touches auth/sessions/RBAC/payments/secrets/encryption/PII/public 
 | `async-error-handling` | Async code. |
 | `fastapi-best-practices` | FastAPI route/router/dependency/application changes. |
 | `python-best-practices` | Python code changes. |
+| `python-design-patterns` | Designing/refactoring Python class/module structure or SOLID/composition/DI decisions. |
 | `openapi-contracts` | FastAPI schema, operation ID, generated client, or FE<->BE contract changes. |
 | `database-transactions` | Multi-statement DB write. |
 | `db-write-protocol` | Any DB write. |
@@ -156,6 +157,7 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 | FastAPI route/router/dependency/app setup | `fastapi-best-practices` + `fastapi-patterns` |
 | New FastAPI domain module | `fastapi-clean-architecture` |
 | Python code/tooling | `python-best-practices` |
+| Python class/module design, SOLID, DI, composition | `python-design-patterns` |
 | Pydantic schema | `pydantic-v2-patterns` |
 | API security/RBAC/CORS/CSRF | `fastapi-security` |
 | FastAPI tests | `fastapi-testing` |
@@ -180,7 +182,7 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 `bug-investigation` -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> failing regression test -> minimal fix -> relevant suite -> `design-review` -> triggered reviewers.
 
 ### Refactor
-`plan-mode` -> `tdd-workflow` -> `code-simplifier` / `cyclomatic-complexity` -> `repo-conventions` -> `design-review` -> reviewers if triggered.
+`plan-mode` -> `tdd-workflow` -> `code-simplifier` / `cyclomatic-complexity` -> `python-design-patterns` for backend class/module structure (SOLID/composition/DI) -> `repo-conventions` -> `design-review` -> reviewers if triggered.
 
 ### Performance work
 `rlm-explore` -> `js-performance-patterns` -> `react-performance` for render cost or `bundle-size` for shipped JS -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> measure/fix/verify -> `design-review`.

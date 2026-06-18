@@ -58,7 +58,7 @@ react-performance react-routing react-state-management react-testing \
 shadcn tailwind-v4-shadcn vite vitest \
 \
 database-transactions db-write-protocol fastapi-best-practices fastapi-clean-architecture \
-fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices openapi-contracts"
+fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts"
 
 AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward"
 
