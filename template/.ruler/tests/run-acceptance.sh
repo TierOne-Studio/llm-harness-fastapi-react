@@ -47,7 +47,7 @@ agent_has_tool() {
 
 # The canonical skills shipped by this fullstack harness (union of both stacks).
 # Process / shared:
-SKILL_LIST="async-error-handling bug-investigation code-simplifier cross-repo-workspace \
+SKILL_LIST="async-error-handling async-python-patterns bug-investigation code-simplifier cross-repo-workspace \
 cyclomatic-complexity decision-rules design-review documentation-and-adrs \
 failure-mode-analysis git-workflow js-performance-patterns meta-skill-hygiene plan-mode \
 pushback-templates quality-gates repo-conventions rlm-explore spec-workflow tdd-workflow typescript-advanced-types \

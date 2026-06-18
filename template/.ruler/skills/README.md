@@ -3,7 +3,7 @@
 <!-- GENERATED FILE — do not edit by hand. Source of truth: each skill's frontmatter
      (harness: tier/family/gist). Regenerate: npm run catalog. CI fails if stale. -->
 
-49 skills in 6 families. The directories are **flat by requirement** — agent runtimes
+50 skills in 6 families. The directories are **flat by requirement** — agent runtimes
 (Claude Code, Codex, Cursor) discover skills as `skills/<name>/SKILL.md`, so grouping
 lives here, not in the filesystem. Depth lives in each skill's `topics/` / `patterns/` /
 `rules/` files, read on demand. Tier routing rules (what loads when) are in
@@ -56,6 +56,7 @@ mindmap
       vite
       vitest
     🏗️ Backend
+      async-python-patterns
       fastapi-best-practices
       fastapi-clean-architecture
       fastapi-patterns
@@ -128,10 +129,11 @@ mindmap
 | [vite](./vite/SKILL.md) | Vite config & build optimization |
 | [vitest](./vitest/SKILL.md) | Vitest config and test API |
 
-## 🏗️ Backend — FastAPI & Python — `apps/api` changes (8)
+## 🏗️ Backend — FastAPI & Python — `apps/api` changes (9)
 
 | Skill | What it gives you |
 |---|---|
+| [async-python-patterns](./async-python-patterns/SKILL.md) | asyncio: TaskGroup/gather, timeout, Semaphore, cancellation, executors |
 | [fastapi-best-practices](./fastapi-best-practices/SKILL.md) | FastAPI production rules: routers, dependencies, schemas, errors, lifespan, OpenAPI |
 | [fastapi-clean-architecture](./fastapi-clean-architecture/SKILL.md) | Layered FastAPI modules with route/service/domain/infrastructure dependency rule |
 | [fastapi-patterns](./fastapi-patterns/SKILL.md) | Depends/Security, APIRouter, lifespan, middleware, overrides, background tasks |

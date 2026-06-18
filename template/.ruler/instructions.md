@@ -83,7 +83,8 @@ If the change touches auth/sessions/RBAC/payments/secrets/encryption/PII/public 
 | `react-patterns` | UI/component/hook/rendering changes. |
 | `react-state-management` | Client/server state placement changes. |
 | `accessibility` | UI markup or interactive elements. |
-| `async-error-handling` | Async code. |
+| `async-error-handling` | Async code (JS/TS tier). |
+| `async-python-patterns` | Python asyncio code (event loop, TaskGroup/gather, cancellation, executors). |
 | `fastapi-best-practices` | FastAPI route/router/dependency/application changes. |
 | `python-best-practices` | Python code changes. |
 | `python-design-patterns` | Designing/refactoring Python class/module structure or SOLID/composition/DI decisions. |
@@ -158,6 +159,7 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 | New FastAPI domain module | `fastapi-clean-architecture` |
 | Python code/tooling | `python-best-practices` |
 | Python class/module design, SOLID, DI, composition | `python-design-patterns` |
+| Python asyncio (event loop, TaskGroup/gather, cancellation, executors) | `async-python-patterns` |
 | Pydantic schema | `pydantic-v2-patterns` |
 | API security/RBAC/CORS/CSRF | `fastapi-security` |
 | FastAPI tests | `fastapi-testing` |
@@ -188,4 +190,4 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 `rlm-explore` -> `js-performance-patterns` -> `react-performance` for render cost or `bundle-size` for shipped JS -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> measure/fix/verify -> `design-review`.
 
 ### Async / external integration code
-`async-error-handling` -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> FastAPI/React tier skill as relevant -> `design-review`.
+`async-error-handling` (JS/TS tier) or `async-python-patterns` (Python asyncio) -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> FastAPI/React tier skill as relevant -> `design-review`.
