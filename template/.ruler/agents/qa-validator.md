@@ -61,6 +61,7 @@ Before evaluating coverage, MUST Read:
 - `.claude/skills/database-transactions/SKILL.md` — when DB writes are touched: is a rollback path tested? Is the transactional boundary exercised by a test that triggers an error mid-callback?
 - `.claude/skills/db-write-protocol/SKILL.md` — when the diff introduces or modifies DB writes; verify the tests honor the project's write protocol.
 - `.claude/skills/fastapi-patterns/SKILL.md` — when the diff touches a cross-cutting layer (Guard / Pipe / Interceptor / Middleware): is the negative/unauthorized path tested?
+- `.claude/skills/async-python-patterns/SKILL.md` — when the diff touches Python asyncio: are timeout, cancellation (`CancelledError`), and bounded-concurrency (`gather`/`TaskGroup`) failure paths tested?
 
 *Either tier:*
 - `.claude/skills/async-error-handling/SKILL.md` — for the `network` and `partial` failure-mode categories: are timeout failures tested? are partial-success scenarios (e.g. `Promise.allSettled`, unmount mid-fetch) covered?

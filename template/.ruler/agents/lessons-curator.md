@@ -63,7 +63,7 @@ The library currently includes (for reference, not "load all of these"). Route t
 - **Patterns (specific):** `react-design-patterns` (index → `patterns/<name>.md`: hooks, hoc, render-props, provider, compound, presentational-container, module, mixin, proxy).
 
 **Backend (`apps/api`):**
-- **FastAPI / Node stack:** `fastapi-best-practices`, `fastapi-clean-architecture`, `python-best-practices`.
+- **FastAPI / Python stack:** `fastapi-best-practices`, `fastapi-clean-architecture`, `python-best-practices`, `python-design-patterns` (class/module structure, SOLID, DI), `async-python-patterns` (Python asyncio).
 - **Tactical patterns:** `fastapi-patterns` — index over `patterns/factory-providers.md`, `patterns/dynamic-modules.md`, `patterns/cross-cutting.md`, `patterns/provider-scopes.md`, `patterns/mixins.md`.
 - **Data:** `database-transactions`, `db-write-protocol`.
 
