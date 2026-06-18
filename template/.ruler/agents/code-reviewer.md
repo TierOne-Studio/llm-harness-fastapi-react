@@ -69,7 +69,9 @@ Backend (`apps/api`):
   - `patterns/provider-scopes.md` — when scope is changed or `Scope.REQUEST`/`TRANSIENT` is introduced.
   - `patterns/mixins.md` — when a parameterized Guard/Interceptor is created.
 - `.claude/skills/db-write-protocol/SKILL.md` — when the change performs a destructive or migration-class DB write.
-- `.claude/skills/python-best-practices/SKILL.md` — when the change touches Node-level concerns (streams, process lifecycle, env, native modules).
+- `.claude/skills/python-best-practices/SKILL.md` — Python code-quality lens for any `apps/api` change: typing, error handling, resource lifetime, async boundaries (load its `topics/*` on demand).
+- `.claude/skills/python-design-patterns/SKILL.md` — when the change adds/refactors Python class/module structure (SOLID, composition, dependency injection, Protocol ports).
+- `.claude/skills/async-python-patterns/SKILL.md` — when the change touches Python asyncio (event loop, `gather`/`TaskGroup`, cancellation, offloading blocking calls).
 
 Either tier:
 - `code-simplifier` — obvious cleanup opportunities (nested ternaries, redundant branches, awkward names) — flag as LOW-severity suggestions.

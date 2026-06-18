@@ -74,7 +74,9 @@ Before any evaluation, MUST Read the following:
   - `patterns/factory-providers.md` — plan introduces `useFactory:` providers.
   - `patterns/provider-scopes.md` — plan introduces `Scope.REQUEST`/`TRANSIENT`.
   - `patterns/mixins.md` — plan introduces parameterized Guards/Interceptors with DI.
-- `.claude/skills/python-best-practices/SKILL.md` — for plans involving framework selection, async patterns, or runtime choices.
+- `.claude/skills/python-best-practices/SKILL.md` — Python code-quality lens (typing, errors, async boundaries, resource lifetime) for `apps/api` plans.
+- `.claude/skills/python-design-patterns/SKILL.md` — when the plan designs/refactors Python class/module structure (SOLID, composition, dependency injection, Protocol ports).
+- `.claude/skills/async-python-patterns/SKILL.md` — when the plan introduces Python asyncio work (concurrency, cancellation, blocking-call offload).
 
 *Either tier:*
 - `async-error-handling` — when the plan introduces parallel I/O, timeouts, retries, new outbound calls, or catch-and-swallow paths (partial-failure modes on parallel external I/O).
