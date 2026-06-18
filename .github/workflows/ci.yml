@@ -18,12 +18,13 @@ jobs:
       matrix:
         node: [20, 22]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ matrix.node }}
+          package-manager-cache: false
       # No runtime dependencies — nothing to install. git is preinstalled on
       # GitHub runners and is required by the update/merge tests.
       - run: npm test
@@ -45,12 +46,13 @@ jobs:
       matrix:
         model: ${{ github.event.inputs.full_matrix == 'true' && fromJSON('["claude-haiku-4-5-20251001","claude-sonnet-4-6"]') || fromJSON('["claude-haiku-4-5-20251001"]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Routing + adherence evals (vs committed baseline)
         run: |
           node eval/routing-eval.mjs --model "${{ matrix.model }}" | tee eval-routing.log
@@ -59,7 +61,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - name: Upload score history artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: eval-scores-${{ matrix.model }}-${{ github.run_number }}
           path: eval-*.log

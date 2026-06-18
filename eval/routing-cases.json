@@ -3,11 +3,14 @@
   "cases": [
     {
       "id": "feat-route",
-      "prompt": "Add a new protected route that fetches user profile data and shows a loading state",
+      "prompt": "Add a new React Router client route in apps/web that is protected by the existing frontend guard, fetches user profile data, and shows a loading state; no FastAPI or OpenAPI changes",
       "expected": [
         "react-routing",
         "react-data-fetching",
         "react-state-management"
+      ],
+      "allowed": [
+        "frontend-security"
       ]
     },
     {
@@ -23,6 +26,9 @@
       "prompt": "Investigate why this component rerenders on every keystroke and reduce the rerender cost",
       "expected": [
         "react-performance"
+      ],
+      "allowed": [
+        "bug-investigation"
       ]
     },
     {
@@ -37,6 +43,10 @@
       "prompt": "Render user-submitted markdown safely without enabling raw HTML injection",
       "expected": [
         "frontend-security"
+      ],
+      "allowed": [
+        "react-testing",
+        "bundle-size"
       ]
     },
     {
@@ -56,10 +66,14 @@
     },
     {
       "id": "fastapi-router",
-      "prompt": "Add a FastAPI APIRouter endpoint for /users/me with a response model",
+      "prompt": "Add a public FastAPI APIRouter endpoint for /status with a response model",
       "expected": [
         "fastapi-best-practices",
-        "pydantic-v2-patterns"
+        "pydantic-v2-patterns",
+        "openapi-contracts"
+      ],
+      "allowed": [
+        "fastapi-patterns"
       ]
     },
     {
@@ -68,6 +82,9 @@
       "expected": [
         "fastapi-patterns",
         "fastapi-security"
+      ],
+      "allowed": [
+        "fastapi-best-practices"
       ]
     },
     {
@@ -75,13 +92,22 @@
       "prompt": "Write pytest coverage for this FastAPI route using dependency overrides for the current user",
       "expected": [
         "fastapi-testing"
+      ],
+      "allowed": [
+        "fastapi-patterns",
+        "fastapi-security"
       ]
     },
     {
       "id": "fastapi-clean-arch",
-      "prompt": "Design a new billing module with routers, services, domain rules, and SQLAlchemy repository adapters",
+      "prompt": "Implement a new internal billing module with services, domain rules, and SQLAlchemy repository adapters; no public API schema or ADR is in scope",
       "expected": [
         "fastapi-clean-architecture"
+      ],
+      "allowed": [
+        "python-best-practices",
+        "db-write-protocol",
+        "fastapi-best-practices"
       ]
     },
     {
@@ -90,6 +116,9 @@
       "expected": [
         "openapi-contracts",
         "pydantic-v2-patterns"
+      ],
+      "allowed": [
+        "fastapi-best-practices"
       ]
     },
     {
@@ -97,6 +126,10 @@
       "prompt": "Review this Python service for typing, Ruff issues, async boundaries, and pytest-friendly design",
       "expected": [
         "python-best-practices"
+      ],
+      "allowed": [
+        "fastapi-best-practices",
+        "fastapi-testing"
       ]
     },
     {
@@ -112,6 +145,10 @@
       "expected": [
         "database-transactions",
         "db-write-protocol"
+      ],
+      "allowed": [
+        "fastapi-best-practices",
+        "fastapi-clean-architecture"
       ]
     },
     {
@@ -119,6 +156,10 @@
       "prompt": "Delete inactive sessions from the database",
       "expected": [
         "db-write-protocol"
+      ],
+      "allowed": [
+        "fastapi-best-practices",
+        "fastapi-security"
       ]
     },
     {
@@ -141,6 +182,9 @@
       "expected": [
         "documentation-and-adrs",
         "decision-rules"
+      ],
+      "allowed": [
+        "fastapi-security"
       ]
     },
     {
@@ -148,6 +192,9 @@
       "prompt": "Refactor this Promise.all to allow partial failures using Promise.allSettled with AbortSignal",
       "expected": [
         "async-error-handling"
+      ],
+      "allowed": [
+        "code-simplifier"
       ]
     },
     {
@@ -155,6 +202,9 @@
       "prompt": "Flatten the nested conditionals in this function using guard clauses and early returns",
       "expected": [
         "cyclomatic-complexity"
+      ],
+      "allowed": [
+        "code-simplifier"
       ]
     },
     {
@@ -189,8 +239,11 @@
       "id": "quality-gate",
       "prompt": "Set up CI and pre-commit hooks for backend pytest/Ruff/typecheck, frontend build/tests, and generated-client drift",
       "expected": [
-        "quality-gates",
-        "openapi-contracts"
+        "quality-gates"
+      ],
+      "allowed": [
+        "openapi-contracts",
+        "python-best-practices"
       ]
     },
     {

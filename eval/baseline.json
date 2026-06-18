@@ -1,4 +1,31 @@
 {
-  "routing": {},
-  "adherence": {}
+  "routing": {
+    "claude-haiku-4-5-20251001": {
+      "backend": "cli",
+      "cases": 29,
+      "calls": 29,
+      "meanRecall": 1,
+      "falsePositiveRate": 0,
+      "meanPrecision": 1,
+      "perfectRecallRate": 1,
+      "paraphraseStability": null,
+      "updatedAt": "2026-06-17T03:45:55.152Z"
+    }
+  },
+  "adherence": {
+    "claude-haiku-4-5-20251001": {
+      "backend": "cli",
+      "cases": 28,
+      "repeats": 3,
+      "passRate": 1,
+      "categories": {
+        "safety": 1,
+        "identity": 1,
+        "ceremony": 1,
+        "routing": 1,
+        "contract": 1
+      },
+      "updatedAt": "2026-06-17T05:07:47.631Z"
+    }
+  }
 }
