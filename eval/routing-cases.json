@@ -133,6 +133,29 @@
       ]
     },
     {
+      "id": "python-design-patterns",
+      "prompt": "Refactor this Python service: replace the growing if/elif type ladder with a strategy, inject the clock and repository as Protocol ports instead of constructing them inside, and favor composition over the deep inheritance chain",
+      "expected": [
+        "python-design-patterns"
+      ],
+      "allowed": [
+        "python-best-practices",
+        "fastapi-clean-architecture",
+        "code-simplifier",
+        "design-review"
+      ]
+    },
+    {
+      "id": "async-python-patterns",
+      "prompt": "This async function calls a blocking requests call and an unbounded asyncio.gather inside the event loop; rework it with TaskGroup, a Semaphore, asyncio.timeout, and run_in_executor for the blocking call",
+      "expected": [
+        "async-python-patterns"
+      ],
+      "allowed": [
+        "python-best-practices"
+      ]
+    },
+    {
       "id": "fastapi-security",
       "prompt": "Audit this FastAPI JWT and cookie auth flow for CORS, CSRF, RBAC, and secret logging",
       "expected": [
