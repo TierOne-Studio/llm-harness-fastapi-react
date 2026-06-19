@@ -99,11 +99,13 @@ function cliEvalCwd() {
   return dir;
 }
 
-async function callCli({ system, prompt, model }) {
+async function callCli({ system, prompt, model, maxTurns = 1 }) {
   // --tools "" : text-only — without it the model may spend its only turn on a
   // tool call (e.g. trying to Read a skill file the catalog names) and the run
-  // dies with "Error: Reached max turns (1)".
-  const args = ['-p', prompt, '--model', model, '--max-turns', '1', '--tools', ''];
+  // dies with "Error: Reached max turns (1)". maxTurns defaults to 1 (enough for
+  // the short routing/adherence outputs); callers needing a large response (e.g.
+  // multi-file code-gen) pass more.
+  const args = ['-p', prompt, '--model', model, '--max-turns', String(maxTurns), '--tools', ''];
   if (system) args.push('--append-system-prompt', system);
   // Headless `claude -p` under rapid sequential invocation intermittently
   // exits 1 with empty stderr, or exits 0 with empty stdout. Both are
@@ -138,14 +140,14 @@ async function callCli({ system, prompt, model }) {
  * ([{role, content}, …] ending on a user turn). Temperature 0 where the
  * backend supports it. backend: 'api' | 'cli'.
  */
-export async function callModel({ system, prompt, turns, model = DEFAULT_MODEL, backend, maxTokens = 1024 }) {
+export async function callModel({ system, prompt, turns, model = DEFAULT_MODEL, backend, maxTokens = 1024, maxTurns = 1 }) {
   const messages = toMessages({ prompt, turns });
   if (backend === 'api') return callApi({ system, messages, model, maxTokens });
   if (backend === 'cli') {
     // Pace sequential CLI calls — rapid bursts intermittently return empty or
     // truncated output from headless `claude -p`.
     await sleep(1000);
-    return callCli({ system, prompt: flattenTurns(messages), model });
+    return callCli({ system, prompt: flattenTurns(messages), model, maxTurns });
   }
   throw new Error(`Unknown backend: ${backend}`);
 }

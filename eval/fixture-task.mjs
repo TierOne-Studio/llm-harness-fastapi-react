@@ -61,7 +61,9 @@ const dir = mkdtempSync(join(tmpdir(), 'fixture-task-'));
 let result = null;
 try {
   cpSync(GOLDEN, dir, { recursive: true });
-  const text = await callModel({ system, prompt, model, backend, maxTokens: 4096 });
+  // Multi-file code-gen needs several turns; CLI `--max-turns 1` errors with
+  // "Reached max turns" on a response this large.
+  const text = await callModel({ system, prompt, model, backend, maxTokens: 4096, maxTurns: 8 });
   const files = parseFiles(text ?? '');
   for (const f of files) {
     const dest = join(dir, f.path);
