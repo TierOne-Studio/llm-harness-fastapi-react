@@ -42,6 +42,11 @@ const WRONG_STACK = [
   /\.(?:controller|service|module|entity)\.ts\b/,
 ];
 
+// Trimmed `import`/`from` lines only — line-based to avoid backtracking-prone
+// multiline regexes (each test runs on one short line, no `\s`/newline ambiguity).
+const importLines = (text) =>
+  text.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('import ') || l.startsWith('from '));
+
 export function scoreFixture(root) {
   const files = walk(root).map((p) => ({ rel: relative(root, p).split('\\').join('/'), text: readFileSync(p, 'utf8') }));
   const py = (f) => f.rel.endsWith('.py');
@@ -55,7 +60,7 @@ export function scoreFixture(root) {
   // INV1 — domain purity: domain imports no framework/ORM.
   {
     const domain = layer('domain');
-    const bad = domain.filter((f) => /^\s*(?:from|import)\s+(?:fastapi|sqlalchemy|sqlmodel)\b/m.test(f.text));
+    const bad = domain.filter((f) => importLines(f.text).some((l) => /\b(?:fastapi|sqlalchemy|sqlmodel)\b/.test(l)));
     add('domain-purity', bad.length === 0,
       bad.length ? `domain imports framework/ORM: ${bad.map((f) => f.rel).join(', ')}` : `${domain.length} domain file(s) pure`);
   }
@@ -76,7 +81,7 @@ export function scoreFixture(root) {
   // INV4 — application depends on the port, not the concrete adapter.
   {
     const app = layer('application').filter(py);
-    const bad = app.filter((f) => /^\s*(?:from|import)\s+\S*infrastructure/m.test(f.text));
+    const bad = app.filter((f) => importLines(f.text).some((l) => l.includes('infrastructure')));
     add('application-not-infra', bad.length === 0,
       bad.length ? `application imports infrastructure: ${bad.map((f) => f.rel).join(', ')}` : `${app.length} service file(s) port-only`);
   }

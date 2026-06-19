@@ -42,10 +42,18 @@ Output ONLY the new or changed files. Emit each as a fenced code block whose inf
 const prompt = `Add a "cancel order" capability end to end: a domain method Order.cancel(), an OrderService.cancel_order use-case, a POST /orders/{order_id}/cancel route returning OrderRead, and a React CancelOrderButton in the orders feature. Show every file you add or change, each as a path=... fenced block.`;
 
 function parseFiles(text) {
+  // Line-based fence parser — avoids a backtracking-prone `[\s\S]*?`-to-delimiter
+  // regex over model output. Each per-line match is linear.
   const out = [];
-  const re = /```[^\n]*path=([^\s`]+)\n([\s\S]*?)```/g;
-  let m;
-  while ((m = re.exec(text))) out.push({ path: m[1].trim(), body: m[2] });
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].match(/^```[^`]*path=([^\s`]+)/);
+    if (!open) continue;
+    const body = [];
+    i += 1;
+    while (i < lines.length && !lines[i].startsWith('```')) body.push(lines[i++]);
+    out.push({ path: open[1].trim(), body: body.length ? `${body.join('\n')}\n` : '' });
+  }
   return out;
 }
 
