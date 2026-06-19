@@ -40,14 +40,18 @@ jobs:
       # after the instructions/skills are rewritten).
       - run: npm run eval:mutation:check
 
-  # Live-model evals: skill routing + gate adherence vs the committed per-model
-  # baselines (eval/baseline.json). The scripts self-skip (exit 0) when the
-  # secret is absent, so forks and secretless runs stay green on the
-  # deterministic suites. PRs gate on the Haiku (cost-floor) run; dispatch with
-  # full_matrix=true to also measure the consumer-grade model.
+  # Live-model evals (CLI backend = the Claude subscription, via the `claude` CLI):
+  # skill routing + gate adherence vs the committed per-model baselines
+  # (eval/baseline.json), which were produced on the CLI backend. The CLI is
+  # installed + authenticated only when CLAUDE_CODE_OAUTH_TOKEN is present;
+  # otherwise the eval scripts self-skip (exit 0 — no CLI on PATH, no API key), so
+  # forks and secretless runs stay green on the deterministic suites. PRs gate on
+  # the Haiku (cost-floor) run; dispatch with full_matrix=true for the larger model.
   eval:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      HAS_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -60,12 +64,17 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-      - name: Routing + adherence evals (vs committed baseline)
+      - name: Install Claude CLI (subscription backend)
+        if: env.HAS_TOKEN == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Routing + adherence evals (CLI backend, vs committed baseline)
+        # pipefail so a baseline regression (non-zero eval exit) isn't masked by tee.
         run: |
+          set -o pipefail
           node eval/routing-eval.mjs --model "${{ matrix.model }}" | tee eval-routing.log
           node eval/adherence-eval.mjs --model "${{ matrix.model }}" --repeats 3 | tee eval-adherence.log
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       - name: Upload score history artifact
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -74,13 +83,16 @@ jobs:
           path: eval-*.log
           if-no-files-found: ignore
 
-  # Deep evals — expensive live-model runs, so nightly + manual dispatch only,
-  # never per-PR. mutation kill-rate is a GATE (a suite that misses seeded
-  # regressions is decoration); context-decay is informative. Both self-skip
-  # (exit 0) without the secret, so secretless schedules stay green.
+  # Deep evals — expensive live-model runs (CLI backend / subscription), nightly +
+  # manual dispatch only, never per-PR. mutation kill-rate is a GATE (a suite that
+  # misses seeded regressions is decoration); context-decay + fixture-task are
+  # informative. All self-skip (exit 0) without the CLI, so secretless schedules
+  # stay green.
   eval-deep:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    env:
+      HAS_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -89,21 +101,24 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
+      - name: Install Claude CLI (subscription backend)
+        if: env.HAS_TOKEN == 'true'
+        run: npm install -g @anthropic-ai/claude-code
       - name: Mutation kill-rate (gate)
         # pipefail so a non-zero mutation exit (an UNEXPECTED survivor) isn't masked by tee.
         run: |
           set -o pipefail
           node scripts/mutation-test.mjs --model "claude-haiku-4-5-20251001" | tee eval-mutation.log
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       - name: Context decay (informative)
         run: node scripts/context-decay.mjs --model "claude-haiku-4-5-20251001" | tee eval-decay.log || true
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       - name: Fixture-task code quality (informative)
         run: node eval/fixture-task.mjs --model "claude-haiku-4-5-20251001" | tee eval-fixture.log || true
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       - name: Upload deep-eval logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
