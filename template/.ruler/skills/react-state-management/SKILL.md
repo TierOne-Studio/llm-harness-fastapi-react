@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "WHERE state lives — the four-layer model; server data never in `useState`"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # React State Management

@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "FastAPI production rules: routers, dependencies, schemas, errors, lifespan, OpenAPI"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier]
 ---
 
 # FastAPI Best Practices

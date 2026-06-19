@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "CI, pre-commit & permission-gate templates (deterministic enforcement)"
+  owners: [main, architect-reviewer]
 ---
 
 # Quality Gates — CI + pre-commit (deterministic enforcement)

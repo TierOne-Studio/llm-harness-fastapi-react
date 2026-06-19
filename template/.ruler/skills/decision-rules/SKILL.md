@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Defaults under ambiguity; the canonical skill-vs-repo conflict table"
+  owners: [main, spec-steward, architect-reviewer]
 ---
 
 # Decision Rules — Defaults Under Ambiguity
@@ -60,7 +61,7 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 
 **Situation:** A skill says one thing, CLAUDE.md / `repo-conventions` says another.
 **Default:** **Follow the skill when it applies.** Skills are the team's curated best-practice catalog and are the default source for situational guidance.
-**Override — structural refactor:** If applying the skill would force a structural change to the repo — installing a new dependency, adding cross-cutting infrastructure the repo lacks (frontend: global error boundary, app-wide store; backend: global filter, global ValidationPipe, app-wide logger swap; either tier: request-id middleware), modifying app-wide bootstrap, or refactoring established patterns in unrelated modules — **follow CLAUDE.md / `repo-conventions` for the current PR** and recommend the skill's pattern as a Future task in the response's Optional Improvements section.
+**Override — structural refactor:** If applying the skill would force a structural change to the repo — installing a new dependency, adding cross-cutting infrastructure the repo lacks (frontend: global error boundary, app-wide store; backend: global exception handler, app-wide logger swap, a new session/engine setup; either tier: request-id middleware), modifying app-wide bootstrap, or refactoring established patterns in unrelated modules — **follow CLAUDE.md / `repo-conventions` for the current PR** and recommend the skill's pattern as a Future task in the response's Optional Improvements section.
 **Rationale:** Skills express the destination; CLAUDE.md sets the boundary conditions for what counts as in-scope for the current change. Smuggling structural refactors into unrelated work is itself a scope-discipline violation. Within CLAUDE.md, lower P-number wins.
 **Test for "structural":** would applying this best practice change code outside the current PR's scope? If yes → repo wins, recommend future task. If no → skill wins, apply now.
 
@@ -73,9 +74,9 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 - Following the feature-folder layout for a NEW feature module.
 
 *Backend (commonly `apps/api`):*
-- Throwing `NotFoundException` / `ForbiddenException` / `BadRequestException` instead of plain `Error` in NEW service code (a common project convention — see `repo-conventions`).
-- Wrapping a multi-statement DB write in `db.transaction(...)` for the current change (per `database-transactions` skill).
-- Choosing the right Guard vs Pipe vs Interceptor for a NEW cross-cutting concern (per `fastapi-patterns`).
+- Raising FastAPI `HTTPException` (or a mapped domain exception) instead of a bare `Exception`/`ValueError` in NEW service code (a common project convention — see `repo-conventions`).
+- Wrapping a multi-statement DB write in `async with session.begin()` for the current change (per `database-transactions` skill).
+- Composing the right `Depends`/`Security` dependency or middleware for a NEW cross-cutting concern (per `fastapi-patterns`).
 - Using `useFactory:` for a NEW provider with env-driven creation.
 - Following the 4-layer module structure for a NEW domain module (see `fastapi-clean-architecture`).
 
@@ -115,7 +116,7 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 
 ### 11. Repo conventions vs requested approach
 
-**Situation:** User asks you to do X but X violates a `repo-conventions` rule — e.g. (frontend) "store this token in a new place" when the project already has a documented token-storage approach, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary; (backend) "throw a generic `Error`" when the convention is FastAPI exceptions, or "use raw SQL" in a new module without one of the documented justifications for falling back from TypeORM.
+**Situation:** User asks you to do X but X violates a `repo-conventions` rule — e.g. (frontend) "store this token in a new place" when the project already has a documented token-storage approach, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary; (backend) "raise a generic `Exception`" when the convention is FastAPI `HTTPException`, or "use raw SQL" in a new module without one of the documented justifications for falling back from SQLAlchemy/SQLModel.
 **Default:** State the conflict. Ask: "<repo-conventions rule>; want me to deviate explicitly, or follow the convention?"
 **Rationale:** The user may have a reason; they may have forgotten; the question is cheap.
 

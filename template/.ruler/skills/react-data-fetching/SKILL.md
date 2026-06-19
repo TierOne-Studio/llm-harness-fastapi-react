@@ -1,6 +1,6 @@
 ---
 name: react-data-fetching
-description: Teaches modern React data fetching patterns with TanStack Query, SWR, and Suspense. Use when implementing caching, deduplication, optimistic updates, or parallel loading in React applications.
+description: Teaches modern React data fetching patterns with TanStack Query, SWR, and Suspense. Use when fetching server data into a route or component (query/mutation hooks, loading and error states), or when implementing caching, deduplication, optimistic updates, or parallel loading in React applications.
 context: fork
 allowed-tools: Read, Grep, Glob
 paths:
@@ -16,6 +16,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Server data: caching, invalidation, optimistic updates — 11 patterns (index + topics)"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator]
 ---
 
 # React Data Fetching Patterns

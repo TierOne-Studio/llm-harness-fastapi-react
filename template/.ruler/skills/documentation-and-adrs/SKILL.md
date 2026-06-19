@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "ADR format + the layered-router documentation principle"
+  owners: [main, spec-steward, architect-reviewer, code-reviewer]
 ---
 
 # Documentation and ADRs
@@ -58,7 +59,7 @@ ADRs are **append-only**. Don't edit accepted ADRs except to update Status (Acce
 
 - ADR numbers (`ADR-00X`, `ADR-00Y`, ... — illustrative; substitute your repo's numbers) — those live in `repo-conventions` § "ADR-backed conventions" + `docs/decisions/README.md`.
 - File paths (`src/...`, `apps/...`, `packages/...`, `docs/...`, `.claude/skills/...`) — those live in skill/subagent files.
-- Code symbols, decorators, class names, function names — frontend (`<RouteGuard>`, `useAuth()`, `<ErrorBoundary>`, etc.) or backend (`OrderService`, `CreateOrderDto`, `@InjectRepository`, etc.) — those live in skills with patterns + examples.
+- Code symbols, class names, function names — frontend (`<RouteGuard>`, `useAuth()`, `<ErrorBoundary>`, etc.) or backend (`OrderService`, `OrderCreate`, `get_session`, etc.) — those live in skills with patterns + examples.
 - Subagent internal step numbers (`code-reviewer Step 5`) — those are subagent implementation detail.
 
 **Where every new artifact gets cited (single-source-of-truth flow):**
@@ -120,7 +121,7 @@ Skill content stays focused on *how to do it correctly today*. The ADR file hold
 - **Editing accepted ADRs.** Append-only. Status-line updates are the only allowed edit.
 - **ADRs for ephemeral decisions.** "Use 4-space indentation" is `.editorconfig`, not an ADR. "We store auth tokens in localStorage, not session cookies" / "We use a session model not JWTs" is an ADR-worthy decision.
 - **Single-alternative ADRs.** "There was no other option" is rarely true. If you can't name an alternative, you haven't thought hard enough.
-- **Decision-without-context ADRs.** "We use Zustand" / "We use TypeORM" is not an ADR — it's a sentence. The Context section is what makes it readable in 12 months.
+- **Decision-without-context ADRs.** "We use Zustand" / "We use SQLAlchemy" is not an ADR — it's a sentence. The Context section is what makes it readable in 12 months.
 
 ## Cross-references
 

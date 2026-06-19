@@ -9,6 +9,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "E2E patterns by framework & surface (index + topic dirs)"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, acceptance-verifier]
 ---
 
 # Playwright Best Practices

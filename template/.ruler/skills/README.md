@@ -150,6 +150,65 @@ mindmap
 | [database-transactions](./database-transactions/SKILL.md) | Multi-statement writes made atomic |
 | [db-write-protocol](./db-write-protocol/SKILL.md) | Approval + impact protocol for ANY database write |
 
+## 🧭 Ownership — every skill maps to the agent(s) that apply it
+
+Derived from each skill's `harness.owners`. `main` is the implementer (instructions.md);
+the rest are the review/verify subagents that apply the skill at their phase. `catalog:check`
+fails if a skill has no owner or a declared owner stops referencing it.
+
+| Skill | Applied by (owners) |
+|---|---|
+| [accessibility](./accessibility/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, acceptance-verifier |
+| [ai-ui-patterns](./ai-ui-patterns/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [async-error-handling](./async-error-handling/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [async-python-patterns](./async-python-patterns/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator |
+| [bug-investigation](./bug-investigation/SKILL.md) | main |
+| [bundle-size](./bundle-size/SKILL.md) | main, architect-reviewer, code-reviewer, security-reviewer |
+| [code-simplifier](./code-simplifier/SKILL.md) | main, code-reviewer |
+| [cross-repo-workspace](./cross-repo-workspace/SKILL.md) | main |
+| [cyclomatic-complexity](./cyclomatic-complexity/SKILL.md) | main, code-reviewer |
+| [database-transactions](./database-transactions/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier |
+| [db-write-protocol](./db-write-protocol/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [decision-rules](./decision-rules/SKILL.md) | main, spec-steward, architect-reviewer |
+| [design-review](./design-review/SKILL.md) | main, spec-steward, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier |
+| [documentation-and-adrs](./documentation-and-adrs/SKILL.md) | main, spec-steward, architect-reviewer, code-reviewer |
+| [failure-mode-analysis](./failure-mode-analysis/SKILL.md) | main, architect-reviewer, qa-validator |
+| [fastapi-best-practices](./fastapi-best-practices/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier |
+| [fastapi-clean-architecture](./fastapi-clean-architecture/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [fastapi-patterns](./fastapi-patterns/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [fastapi-security](./fastapi-security/SKILL.md) | main, architect-reviewer, security-reviewer |
+| [fastapi-testing](./fastapi-testing/SKILL.md) | main, qa-validator |
+| [frontend-security](./frontend-security/SKILL.md) | main, architect-reviewer, code-reviewer, security-reviewer |
+| [git-workflow](./git-workflow/SKILL.md) | main |
+| [js-performance-patterns](./js-performance-patterns/SKILL.md) | main, code-reviewer |
+| [meta-skill-hygiene](./meta-skill-hygiene/SKILL.md) | architect-reviewer, code-reviewer, security-reviewer, lessons-curator |
+| [openapi-contracts](./openapi-contracts/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [plan-mode](./plan-mode/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [playwright-best-practices](./playwright-best-practices/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, acceptance-verifier |
+| [pushback-templates](./pushback-templates/SKILL.md) | main |
+| [pydantic-v2-patterns](./pydantic-v2-patterns/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [python-best-practices](./python-best-practices/SKILL.md) | main, architect-reviewer, code-reviewer, security-reviewer |
+| [python-design-patterns](./python-design-patterns/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [quality-gates](./quality-gates/SKILL.md) | main, architect-reviewer |
+| [react-2026](./react-2026/SKILL.md) | main, architect-reviewer |
+| [react-data-fetching](./react-data-fetching/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator |
+| [react-design-patterns](./react-design-patterns/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [react-forms](./react-forms/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [react-patterns](./react-patterns/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [react-performance](./react-performance/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [react-routing](./react-routing/SKILL.md) | main, architect-reviewer, code-reviewer, security-reviewer |
+| [react-state-management](./react-state-management/SKILL.md) | main, architect-reviewer, code-reviewer |
+| [react-testing](./react-testing/SKILL.md) | main, qa-validator, acceptance-verifier |
+| [repo-conventions](./repo-conventions/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier |
+| [rlm-explore](./rlm-explore/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer |
+| [shadcn](./shadcn/SKILL.md) | main, code-reviewer |
+| [spec-workflow](./spec-workflow/SKILL.md) | main, spec-steward |
+| [tailwind-v4-shadcn](./tailwind-v4-shadcn/SKILL.md) | main, code-reviewer |
+| [tdd-workflow](./tdd-workflow/SKILL.md) | main, architect-reviewer, qa-validator, acceptance-verifier |
+| [typescript-advanced-types](./typescript-advanced-types/SKILL.md) | main, code-reviewer |
+| [vite](./vite/SKILL.md) | main, architect-reviewer |
+| [vitest](./vitest/SKILL.md) | main, qa-validator |
+
 ---
 
 Adding a skill? Keep the directory flat, set `harness: tier/family/gist` in its

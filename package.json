@@ -25,7 +25,10 @@
     "catalog": "node scripts/build-skill-catalog.mjs",
     "catalog:check": "node scripts/build-skill-catalog.mjs --check",
     "eval:mutation": "node scripts/mutation-test.mjs",
-    "eval:decay": "node scripts/context-decay.mjs"
+    "eval:mutation:check": "node scripts/mutation-test.mjs --dry-run",
+    "eval:decay": "node scripts/context-decay.mjs",
+    "eval:fixture": "node eval/fixture-task.mjs",
+    "fixture:quality": "node scripts/fixture-quality.mjs"
   },
   "keywords": [
     "llm",

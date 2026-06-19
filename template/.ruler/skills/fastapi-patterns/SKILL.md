@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "Depends/Security, APIRouter, lifespan, middleware, overrides, background tasks"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # FastAPI Tactical Patterns

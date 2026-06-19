@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Lens-switching when one session spans two or more repos"
+  owners: [main]
 ---
 
 # Cross-Repo Workspace

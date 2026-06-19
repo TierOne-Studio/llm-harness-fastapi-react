@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "RHF + Zod, schema-first, accessible field errors"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # React Forms (React Hook Form + Zod)

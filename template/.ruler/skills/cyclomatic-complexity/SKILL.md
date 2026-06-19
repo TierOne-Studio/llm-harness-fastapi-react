@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: language
   gist: "Flattening branch-heavy, nested functions"
+  owners: [main, code-reviewer]
 ---
 
 # Cyclomatic Complexity — Early Returns and Flat Functions
@@ -77,28 +78,23 @@ function ProjectAccessGate({ projectId, children }: Props) {
 
 Backend (FastAPI):
 
-```ts
-// ❌ 4 levels of nesting; happy path is buried
-async findOne(id: string, scope: OrgScope): Promise<Project> {
-  if (scope) {
-    if (scope.mode === 'single') {
-      if (scope.organizationId) {
-        const project = await this.repo.findById(id, scope.organizationId)
-        if (project) {
-          return project
-        } else {
-          throw new NotFoundException(`Project ${id} not found`)
-        }
-      } else {
-        throw new BadRequestException('organization id required')
-      }
-    } else {
-      throw new BadRequestException('scope=all not supported here')
-    }
-  } else {
-    throw new ForbiddenException('scope required')
-  }
-}
+```python
+# ❌ 4 levels of nesting; happy path is buried
+async def get_one(self, id: str, scope: OrgScope) -> Project:
+    if scope:
+        if scope.mode == "single":
+            if scope.organization_id:
+                project = await self._repo.find_by_id(id, scope.organization_id)
+                if project:
+                    return project
+                else:
+                    raise HTTPException(status_code=404, detail=f"Project {id} not found")
+            else:
+                raise HTTPException(status_code=400, detail="organization id required")
+        else:
+            raise HTTPException(status_code=400, detail="scope=all not supported here")
+    else:
+        raise HTTPException(status_code=403, detail="scope required")
 ```
 
 ### Refactor: guard clauses + happy path at the bottom
@@ -124,20 +120,23 @@ function ProjectAccessGate({ projectId, children }: Props) {
 
 Backend (FastAPI):
 
-```ts
-// ✅ Each precondition is a guard; happy path is unindented
-async findOne(id: string, scope: OrgScope): Promise<Project> {
-  if (!scope) throw new ForbiddenException('scope required')
-  if (scope.mode !== 'single') throw new BadRequestException('scope=all not supported here')
-  if (!scope.organizationId) throw new BadRequestException('organization id required')
+```python
+# ✅ Each precondition is a guard; happy path is unindented
+async def get_one(self, id: str, scope: OrgScope) -> Project:
+    if not scope:
+        raise HTTPException(status_code=403, detail="scope required")
+    if scope.mode != "single":
+        raise HTTPException(status_code=400, detail="scope=all not supported here")
+    if not scope.organization_id:
+        raise HTTPException(status_code=400, detail="organization id required")
 
-  const project = await this.repo.findById(id, scope.organizationId)
-  if (!project) throw new NotFoundException(`Project ${id} not found`)
-  return project
-}
+    project = await self._repo.find_by_id(id, scope.organization_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail=f"Project {id} not found")
+    return project
 ```
 
-Cyclomatic complexity is unchanged (still 5), but the happy path is unindented and each guard says "this *must* be true to proceed." The JSX form is the component-shaped equivalent of throwing early in a service function.
+Cyclomatic complexity is unchanged (still 5), but the happy path is unindented and each guard says "this *must* be true to proceed." The JSX form is the component-shaped equivalent of raising early in a service function.
 
 ### Rule of thumb
 
@@ -233,25 +232,24 @@ function ProjectsPage() {
 
 Backend (FastAPI):
 
-```ts
-// ❌ One big method. Each section is a "step" but they're not labeled.
-async createProjectWithSource(input: CreateProjectInput, scope: OrgScope): Promise<Project> {
-  if (!scope.organizationId) throw new BadRequestException()
-  const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-  const existing = await this.repo.findBySlug(slug, scope.organizationId)
-  if (existing) throw new BadRequestException('name in use')
-  return await this.db.transaction(async (query) => {
-    const [project] = await query<Project>(`INSERT INTO ...`, [...])
-    if (input.source.kind === 'database') {
-      await query(`INSERT INTO project_data_sources (..., db_url) VALUES ($1, ..., $5)`, [...])
-    } else if (input.source.kind === 'airweave_collection') {
-      await query(`INSERT INTO project_data_sources (..., collection_id) VALUES ($1, ..., $5)`, [...])
-    } else {
-      await query(`INSERT INTO project_data_sources (..., url) VALUES ($1, ..., $5)`, [...])
-    }
-    return project
-  })
-}
+```python
+# ❌ One big method. Each section is a "step" but they're not labeled.
+async def create_project_with_source(self, input: CreateProjectInput, scope: OrgScope) -> Project:
+    if not scope.organization_id:
+        raise HTTPException(status_code=400, detail="organization id required")
+    slug = slugify(input.name)
+    existing = await self._repo.find_by_slug(slug, scope.organization_id)
+    if existing:
+        raise HTTPException(status_code=400, detail="name in use")
+    async with self._session.begin():
+        project = await self._repo.insert_project(input, slug, scope.organization_id)
+        if input.source.kind == "database":
+            await self._repo.insert_source(project.id, db_url=input.source.db_url)
+        elif input.source.kind == "airweave_collection":
+            await self._repo.insert_source(project.id, collection_id=input.source.collection_id)
+        else:
+            await self._repo.insert_source(project.id, url=input.source.url)
+        return project
 ```
 
 ### Refactor: each step is a named hook/method
@@ -277,22 +275,20 @@ Each `useActiveOrgWithDefault`/`useFilterArchived`/etc. is a small, focused hook
 
 Backend (FastAPI):
 
-```ts
-// ✅ Top-level reads like a checklist; each step has a single, testable purpose
-async createProjectWithSource(input: CreateProjectInput, scope: OrgScope): Promise<Project> {
-  this.assertOrgScope(scope)
-  const slug = this.toSlug(input.name)
-  await this.assertSlugAvailable(slug, scope.organizationId)
+```python
+# ✅ Top-level reads like a checklist; each step has a single, testable purpose
+async def create_project_with_source(self, input: CreateProjectInput, scope: OrgScope) -> Project:
+    self._assert_org_scope(scope)
+    slug = self._to_slug(input.name)
+    await self._assert_slug_available(slug, scope.organization_id)
 
-  return this.db.transaction(async (query) => {
-    const project = await this.insertProject(query, input, slug, scope.organizationId)
-    await this.insertSource(query, project.id, input.source)
-    return project
-  })
-}
+    async with self._session.begin():
+        project = await self._insert_project(input, slug, scope.organization_id)
+        await self._insert_source(project.id, input.source)
+        return project
 ```
 
-Each `insertSource`/`assertSlugAvailable`/etc. is a small, focused method. The orchestration method is now ~6 lines.
+Each `_insert_source`/`_assert_slug_available`/etc. is a small, focused method. The orchestration method is now ~6 lines.
 
 ## Tactic 5: Replace boolean flag with separate functions
 
@@ -316,18 +312,19 @@ async function findProjectIncludingArchived(id: string): Promise<Project> { retu
 
 Backend (FastAPI):
 
-```ts
-// ❌ Caller has to remember which boolean to pass
-async findProject(id: string, includeArchived: boolean): Promise<Project> {
-  if (includeArchived) {
-    return await this.repo.findByIdIncludingArchived(id)
-  }
-  return await this.repo.findActive(id)
-}
+```python
+# ❌ Caller has to remember which boolean to pass
+async def find_project(self, id: str, include_archived: bool) -> Project:
+    if include_archived:
+        return await self._repo.find_by_id_including_archived(id)
+    return await self._repo.find_active(id)
 
-// ✅ Two functions, two clear names
-async findActiveProject(id: string): Promise<Project> { return this.repo.findActive(id) }
-async findProjectIncludingArchived(id: string): Promise<Project> { return this.repo.findByIdIncludingArchived(id) }
+# ✅ Two functions, two clear names
+async def find_active_project(self, id: str) -> Project:
+    return await self._repo.find_active(id)
+
+async def find_project_including_archived(self, id: str) -> Project:
+    return await self._repo.find_by_id_including_archived(id)
 ```
 
 Exception: the boolean genuinely toggles a small detail (e.g., a debug or logging flag) — leave it.

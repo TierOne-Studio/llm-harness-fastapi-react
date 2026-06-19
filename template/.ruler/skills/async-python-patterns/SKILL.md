@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "asyncio: TaskGroup/gather, timeout, Semaphore, cancellation, executors"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator]
 ---
 
 # Async Python Patterns

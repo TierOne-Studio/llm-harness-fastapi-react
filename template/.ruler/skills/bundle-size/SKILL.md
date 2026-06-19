@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Bundle audits, tree-shaking, lazy routes, dependency cost"
+  owners: [main, architect-reviewer, code-reviewer, security-reviewer]
 ---
 
 # Bundle Size

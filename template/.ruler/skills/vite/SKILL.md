@@ -9,6 +9,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Vite config & build optimization"
+  owners: [main, architect-reviewer]
 ---
 
 # Vite

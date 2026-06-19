@@ -9,6 +9,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Vitest config and test API"
+  owners: [main, qa-validator]
 ---
 
 Vitest is a next-generation testing framework powered by Vite. It provides a pytest-compatible API with native ESM, TypeScript, and JSX support out of the box. Vitest shares the same config, transformers, resolvers, and plugins with your Vite app.

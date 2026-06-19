@@ -9,6 +9,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "The modern stack tour + composition idioms (index + topics)"
+  owners: [main, architect-reviewer]
 ---
 
 # React 2026 — Stack & Composition

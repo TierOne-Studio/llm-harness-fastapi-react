@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Nine classic patterns — hooks, HOC, render props, provider, compound, presentational/container, module, mixin, proxy (index + patterns)"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # React & JS Design Patterns

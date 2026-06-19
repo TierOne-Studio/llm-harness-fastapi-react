@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: data
   gist: "Approval + impact protocol for ANY database write"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # Database Write Protocol

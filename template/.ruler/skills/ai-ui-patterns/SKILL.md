@@ -16,6 +16,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Streaming/chat AI interface patterns"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # AI UI Patterns

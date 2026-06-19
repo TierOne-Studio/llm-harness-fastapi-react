@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Measurement discipline + the 25-pattern deep render-mechanics catalog (index + topics)"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # React Performance

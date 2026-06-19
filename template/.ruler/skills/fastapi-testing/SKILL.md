@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "pytest, TestClient/httpx, dependency overrides, DB isolation, OpenAPI checks"
+  owners: [main, qa-validator]
 ---
 
 # FastAPI Testing

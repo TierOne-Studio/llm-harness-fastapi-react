@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Slice-based digestion of big or unfamiliar context"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # RLM Explore — Recursive Language Model Mechanics

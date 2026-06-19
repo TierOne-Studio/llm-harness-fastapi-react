@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Routes, guards, expired-session flow, code-split per route"
+  owners: [main, architect-reviewer, code-reviewer, security-reviewer]
 ---
 
 # React Routing (React Router 7)

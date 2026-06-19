@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Ranked falsifiable hypotheses before any fix"
+  owners: [main]
 ---
 
 # Bug Investigation

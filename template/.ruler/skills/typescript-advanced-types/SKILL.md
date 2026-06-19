@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: language
   gist: "Generics, conditional/mapped/template-literal types (index + topics)"
+  owners: [main, code-reviewer]
 ---
 
 # TypeScript Advanced Types

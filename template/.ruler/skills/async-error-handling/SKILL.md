@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: language
   gist: "Promise composition, AbortSignal, where to catch"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # Async Error Handling
@@ -32,9 +33,9 @@ The most LLM-error-prone area in JS/TS. The default model habits — wrapping ev
 
 ## Core rules (override LLM defaults)
 
-1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. On the backend, throw a FastAPI exception (`ForbiddenException`, `BadRequestException`, `NotFoundException`, etc.). On the frontend, throw a typed `Error` (or framework-typed exception per `repo-conventions`) and let TanStack Query / the error boundary / the toast handler surface it.
+1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. On the backend, raise a FastAPI `HTTPException` (or a mapped domain exception). On the frontend, throw a typed `Error` (or framework-typed exception per `repo-conventions`) and let TanStack Query / the error boundary / the toast handler surface it.
 
-2. **Catch at the boundary, not at every layer.** Backend: a repository throws → the service lets it propagate → the controller's exception filter maps it to HTTP. Frontend: a service throws → the query/mutation hook lets it propagate → TanStack Query surfaces `error` via its return value → the consuming component renders an error state. Catching mid-stack only to rethrow is noise.
+2. **Catch at the boundary, not at every layer.** Backend: a repository raises → the service lets it propagate → FastAPI maps it to HTTP (directly via `HTTPException`, or a registered exception handler). Frontend: a service throws → the query/mutation hook lets it propagate → TanStack Query surfaces `error` via its return value → the consuming component renders an error state. Catching mid-stack only to rethrow is noise.
 
 3. **Never catch-and-ignore.** `try { ... } catch {}` is forbidden. If you genuinely don't care about the error, log at `warn` with context AND comment why ignoring is correct.
 
@@ -133,15 +134,15 @@ const { data, error, isLoading } = useQuery({ queryKey: ['project', id], queryFn
 if (error) return <ErrorState error={error} />
 ```
 
-Backend (FastAPI) — service throws a domain exception; FastAPI maps it to HTTP:
+Backend (FastAPI) — service raises; FastAPI maps it to HTTP:
 
-```ts
-// ✅ Repo throws ForbiddenException; service propagates; FastAPI maps to 403
-async findOne(id: string, organizationId: string) {
-  const project = await this.repo.findById(id, organizationId)
-  if (!project) throw new NotFoundException(`Project ${id} not found`)
-  return project
-}
+```python
+# ✅ Repo returns None; service raises HTTPException; FastAPI maps to 404
+async def get_one(self, id: str, organization_id: str) -> Project:
+    project = await self._repo.find_by_id(id, organization_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail=f"Project {id} not found")
+    return project
 ```
 
 ### Valid reasons to catch
@@ -181,7 +182,7 @@ async fetchExternal(query: string, signal?: AbortSignal): Promise<Result> {
   const timeoutSignal = AbortSignal.timeout(5_000)
   const combined = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
   const res = await fetch(this.url, { signal: combined })
-  if (!res.ok) throw new HttpException(`upstream ${res.status}`, res.status)
+  if (!res.ok) throw new Error(`upstream ${res.status}`)
   return res.json()
 }
 ```
@@ -229,8 +230,8 @@ Frontend (commonly `apps/web`):
 Backend (commonly `apps/api`):
 
 - Service-level parallel per-source search across a data-source array — should use `Promise.allSettled` so one source's failure doesn't blank the response. Filter to `ready` sources first (per `repo-conventions`).
-- Repository methods (`*.database-repository.ts`) — let DB errors propagate; the service throws domain exceptions (`NotFoundException` etc.); the exception filter maps to HTTP.
-- External HTTP calls — wrap in `AbortSignal.timeout()`; throw `HttpException` on non-2xx; let it propagate.
+- Repository methods (`infrastructure/repositories.py`) — let DB errors propagate; the service raises `HTTPException` (or a mapped domain exception); FastAPI maps to HTTP.
+- External HTTP calls (frontend) — wrap in `AbortSignal.timeout()`; throw a typed `Error` on non-2xx; let it propagate.
 
 ## Cross-references
 

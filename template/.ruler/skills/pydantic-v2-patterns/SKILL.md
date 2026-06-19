@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "Pydantic v2 schema design, validation, serialization, settings, DTO evolution"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # Pydantic v2 Patterns

@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Auditing this skill library itself (overlap, bloat, size ceilings)"
+  owners: [architect-reviewer, code-reviewer, security-reviewer, lessons-curator]
 ---
 
 # Meta-Skill Hygiene

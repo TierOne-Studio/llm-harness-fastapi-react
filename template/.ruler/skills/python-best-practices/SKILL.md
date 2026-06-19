@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "Python typing, tooling, async boundaries, pytest, logging, maintainable backend style"
+  owners: [main, architect-reviewer, code-reviewer, security-reviewer]
 ---
 
 # Python Best Practices

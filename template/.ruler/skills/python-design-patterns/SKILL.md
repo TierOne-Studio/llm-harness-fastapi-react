@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "SOLID/DRY/KISS/SOC, DI, Protocol ports, Pythonic patterns, value objects"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # Python Design Patterns

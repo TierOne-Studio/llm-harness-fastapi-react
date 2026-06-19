@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "How to disagree: observation, tradeoff, question — one round"
+  owners: [main]
 ---
 
 # Pushback Templates

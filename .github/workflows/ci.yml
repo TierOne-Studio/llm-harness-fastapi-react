@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Nightly deep evals (mutation kill-rate + context-decay) — too costly per-PR.
+    - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       full_matrix:
@@ -32,6 +35,10 @@ jobs:
       - run: npm run test:harness
       # The skill catalog is generated from frontmatter — fail if it's stale.
       - run: npm run catalog:check
+      # The mutation suite must keep targeting live template text — a backend-free
+      # structural check that catches "mutation rot" (a mutant that silently no-ops
+      # after the instructions/skills are rewritten).
+      - run: npm run eval:mutation:check
 
   # Live-model evals: skill routing + gate adherence vs the committed per-model
   # baselines (eval/baseline.json). The scripts self-skip (exit 0) when the
@@ -64,5 +71,40 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: eval-scores-${{ matrix.model }}-${{ github.run_number }}
+          path: eval-*.log
+          if-no-files-found: ignore
+
+  # Deep evals — expensive live-model runs, so nightly + manual dispatch only,
+  # never per-PR. mutation kill-rate is a GATE (a suite that misses seeded
+  # regressions is decoration); context-decay is informative. Both self-skip
+  # (exit 0) without the secret, so secretless schedules stay green.
+  eval-deep:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Mutation kill-rate (gate)
+        run: node scripts/mutation-test.mjs --model "claude-haiku-4-5-20251001" | tee eval-mutation.log
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Context decay (informative)
+        run: node scripts/context-decay.mjs --model "claude-haiku-4-5-20251001" | tee eval-decay.log || true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Fixture-task code quality (informative)
+        run: node eval/fixture-task.mjs --model "claude-haiku-4-5-20251001" | tee eval-fixture.log || true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Upload deep-eval logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: eval-deep-${{ github.run_number }}
           path: eval-*.log
           if-no-files-found: ignore

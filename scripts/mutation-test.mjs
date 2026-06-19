@@ -36,6 +36,20 @@ function valueAfter(flag) {
 const model = valueAfter('--model');
 const modelArg = model ? ['--model', model] : [];
 
+// --dry-run is a backend-free structural check (handled after the mutation list).
+const dryRun = process.argv.includes('--dry-run');
+
+// Use whatever live backend is available (API key in CI, `claude` CLI locally).
+// With none, skip cleanly (exit 0) — "not measured", not a failed gate.
+// `--backend` overrides the auto-detection. (--dry-run needs no backend.)
+const { detectBackend } = await import(join(ROOT, 'eval', 'lib.mjs'));
+const detected = detectBackend();
+if (!dryRun && !detected) {
+  console.log('SKIP: mutation-test — no live backend (no ANTHROPIC_API_KEY, no claude CLI).');
+  process.exit(0);
+}
+const backendArg = valueAfter('--backend') || detected || 'cli';
+
 const MUTATIONS = [
   {
     id: 'm-remove-p36',
@@ -43,7 +57,7 @@ const MUTATIONS = [
     cases: 'fast-path-declared,mt-escalation',
     describe: 'Delete the entire P3.6 fast/full path section',
     apply: (text) => {
-      const out = text.replace(/### P3\.6[\s\S]*?(?=\n---)/, '');
+      const out = text.replace(/### P3\.6[\s\S]*?(?=\n## P4)/, '');
       if (out === text) throw new Error('P3.6 section not found');
       return out;
     },
@@ -66,10 +80,13 @@ const MUTATIONS = [
     id: 'm-remove-approval-line',
     kind: 'adherence',
     cases: 'p0-db-delete,p0-dep-add',
-    describe: 'Remove the literal Awaiting-approval step from P0.3',
+    describe: 'Soften the Awaiting-approval sentinel in the P0 approval template',
     apply: (text) => {
-      const out = text.replace(/3\. MUST output the literal line: `Awaiting approval \(reply 'approve' or 'yes' to proceed\)`\.\n/, '');
-      if (out === text) throw new Error('P0.3 step 3 not found');
+      const out = text.replace(
+        "`Awaiting approval (reply 'approve' or 'yes' to proceed)`",
+        '(you may proceed without waiting)',
+      );
+      if (out === text) throw new Error('approval sentinel line not found');
       return out;
     },
   },
@@ -77,10 +94,13 @@ const MUTATIONS = [
     id: 'm-remove-waivers',
     kind: 'adherence',
     cases: 'tdd-waiver-docs',
-    describe: 'Remove the TDD waiver-phrase list',
+    describe: 'Remove the closed-set TDD waiver list',
     apply: (text) => {
-      const out = text.replace(/Either follow TDD or include exactly one of[^\n]*\n/, 'TDD can be skipped when it does not apply.\n');
-      if (out === text) throw new Error('waiver sentence not found');
+      const out = text.replace(
+        /Legal waivers are a closed set:.*?`TDD waived — ADR-only change\.`/s,
+        'TDD can be skipped with any brief note when it does not apply.',
+      );
+      if (out === text) throw new Error('TDD closed-set waiver list not found');
       return out;
     },
   },
@@ -126,6 +146,28 @@ if (only) {
   }
 }
 
+// --dry-run: structural check only — confirm each mutation still targets real
+// text in the CURRENT template (no backend, no model calls). Catches "mutation
+// rot" when instructions.md / a skill is rewritten and a mutant silently no-ops.
+// Runs in the deterministic CI gate so the kill-rate suite can never go hollow.
+if (dryRun) {
+  let broke = 0;
+  for (const m of selected) {
+    const src = m.kind === 'adherence'
+      ? readFileSync(INSTRUCTIONS, 'utf8')
+      : readFileSync(join(SKILLS, m.skill, 'SKILL.md'), 'utf8');
+    try {
+      const out = m.apply(src);
+      if (out === src) { console.error(`STALE: ${m.id} — applied but changed nothing (target text gone)`); broke += 1; }
+      else console.log(`OK: ${m.id} — targets live text`);
+    } catch (e) {
+      console.error(`STALE: ${m.id} — ${e.message}`); broke += 1;
+    }
+  }
+  console.log(`\nDry-run: ${selected.length - broke}/${selected.length} mutations target live text.`);
+  process.exit(broke ? 1 : 0);
+}
+
 function runEval(args) {
   const res = spawnSync('node', args, { encoding: 'utf8', cwd: ROOT, maxBuffer: 16 * 1024 * 1024 });
   if (res.error) throw new Error(`eval failed to spawn: ${res.error.message}`);
@@ -143,13 +185,13 @@ for (const m of selected) {
       const mutated = m.apply(readFileSync(INSTRUCTIONS, 'utf8'));
       const file = join(tmp, 'instructions.md');
       writeFileSync(file, mutated);
-      output = runEval(['eval/adherence-eval.mjs', '--backend', 'cli', '--instructions', file, '--only', m.cases, ...modelArg]);
+      output = runEval(['eval/adherence-eval.mjs', '--backend', backendArg, '--instructions', file, '--only', m.cases, ...modelArg]);
     } else {
       const skillsCopy = join(tmp, 'skills');
       cpSync(SKILLS, skillsCopy, { recursive: true });
       const file = join(skillsCopy, m.skill, 'SKILL.md');
       writeFileSync(file, m.apply(readFileSync(file, 'utf8')));
-      output = runEval(['eval/routing-eval.mjs', '--backend', 'cli', '--skills-dir', skillsCopy, '--only', m.cases, ...modelArg]);
+      output = runEval(['eval/routing-eval.mjs', '--backend', backendArg, '--skills-dir', skillsCopy, '--only', m.cases, ...modelArg]);
     }
     // Red must mean the CASES failed, not that the eval machinery did. With a
     // dead backend every case errors, prints FAIL/MISS, and every mutant would

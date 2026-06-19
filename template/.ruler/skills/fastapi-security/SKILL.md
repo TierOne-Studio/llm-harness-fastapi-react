@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "FastAPI auth dependencies, RBAC, CORS/CSRF, injection, secrets, rate limiting, security schemes"
+  owners: [main, architect-reviewer, security-reviewer]
 ---
 
 # FastAPI Security

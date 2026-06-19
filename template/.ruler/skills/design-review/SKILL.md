@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "SOLID/DRY/KISS pass + the verification line, before declaring done"
+  owners: [main, spec-steward, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier]
 ---
 
 # Design Review

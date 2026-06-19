@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Branch/commit/PR mutations done safely"
+  owners: [main]
 ---
 
 # Git Workflow
@@ -70,7 +71,7 @@ Example (backend change, commonly under `apps/api`):
 ```
 Awaiting approval for: git push origin feat/scope-fix
 Branch:        feat/scope-fix (local) → origin/feat/scope-fix (remote)
-Files changed: 4 (projects.controller.ts, projects.service.ts, projects.controller.spec.ts, project.dto.ts)
+Files changed: 4 (projects/routes.py, projects/services.py, tests/test_projects.py, projects/schemas.py)
 Remote impact: pushes 3 new commits to origin/feat/scope-fix; no shared base affected.
 Reversibility: easy — git push --force on the same branch (with approval).
 Collaborators: solo branch.

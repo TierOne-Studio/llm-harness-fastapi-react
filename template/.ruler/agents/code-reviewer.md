@@ -43,14 +43,22 @@ Before evaluating any code, MUST Read.
 
 **Always read for backend (`apps/api`) diffs:**
 
-- `.claude/skills/fastapi-best-practices/SKILL.md` — 40-rule index. The `di-*`, `error-*`, `security-*`, `perf-*`, `api-*` rules cross-validate the design review. Read individual `rules/*.md` files when a specific rule is relevant.
+- `.claude/skills/fastapi-best-practices/SKILL.md` — the production-API ruleset (Hard Rules, Common Review Findings, Route Handler Standard, Dependency Boundary, Persistence and Migrations, Performance, OpenAPI Hygiene). Cross-validate the design review against the relevant section; its "Do Not Flag (Idiomatic FastAPI)" section guards against false positives.
 - `.claude/skills/fastapi-clean-architecture/SKILL.md` — when the diff adds files under a domain module's `domain/`, `application/`, or `infrastructure/` layer. Apply the dependency-rule / clean-architecture check it documents.
+
+**Always read for shared-contract (`generated OpenAPI client`) diffs:**
+
+- `.claude/skills/openapi-contracts/SKILL.md` — the contract-seam discipline (FastAPI is the contract source, stable operation IDs, no hand-redeclared React DTOs, generated-client drift gate, coordinated breaking changes). This is the canonical basis for the § 4 "OpenAPI contracts" subsection — apply its Hard Rules + Contract Change Checklist instead of reviewing the seam from memory.
 
 **Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a generic stack skill (a React-stack skill like `react-patterns`, or a backend skill like `fastapi-best-practices`) recommends a pattern that conflicts with `CLAUDE.md` or `repo-conventions`, **default to the skill** unless applying it would require structural refactor (new dep, cross-cutting infra the repo lacks, app-wide bootstrap changes, or refactoring unrelated modules). For structural cases, **the repo wins for this PR** — but flag it as an Optional Improvement: "Future task — adopt `<practice>` per `<skill>` (§ `<rule>` if applicable). Current PR follows existing repo convention to keep scope minimal." If you find the change implements a generic rule that would have been a structural refactor and the agent didn't flag it as a future task, that's a MED finding.
 
 **Read conditionally** (load when the change touches the surface):
 
 Frontend (`apps/web`):
+- `react-design-patterns` — diff introduces/refactors a custom hook, compound component, provider, render prop, or HOC.
+- `ai-ui-patterns` — diff implements an AI UI surface (chat, streaming response, assistant/agent UX, tool-call rendering): check streaming state, partial-render, and error/cancel handling.
+- `shadcn` — diff adds/modifies shadcn components: composition over forking, correct primitive usage, no drift from the registry.
+- `tailwind-v4-shadcn` — diff touches Tailwind v4 styling / theme tokens: cross-check the §4 Frontend "Styling" convention (class-merge helper, variants, no ad-hoc inline `style`).
 - `react-routing` — diff modifies routes/guards/expired-session flow.
 - `react-forms` — diff modifies a form.
 - `react-data-fetching` — diff adds/modifies a query/mutation hook.
@@ -62,26 +70,27 @@ Frontend (`apps/web`):
 
 Backend (`apps/api`):
 - `.claude/skills/database-transactions/SKILL.md` — when the change includes any multi-statement DB write or read-then-write.
-- `.claude/skills/fastapi-patterns/SKILL.md` — index of 5 FastAPI tactical patterns. Read the index first, then load the relevant `patterns/<name>.md`:
-  - `patterns/cross-cutting.md` — when the change adds/modifies a Guard, Pipe, Interceptor, or Middleware.
-  - `patterns/factory-providers.md` — when the change adds/modifies `useFactory:` providers.
-  - `patterns/dynamic-modules.md` — when the change uses `forRoot`/`forRootAsync`/`forFeature`.
-  - `patterns/provider-scopes.md` — when scope is changed or `Scope.REQUEST`/`TRANSIENT` is introduced.
-  - `patterns/mixins.md` — when a parameterized Guard/Interceptor is created.
+- `.claude/skills/fastapi-patterns/SKILL.md` — tactical FastAPI wiring. Read it when the change touches:
+  - **dependency composition** — `Depends`/`Security` dependencies, `Annotated` type aliases, router-level shared `dependencies=[...]` for cross-cutting auth/scope (FastAPI has no Guards/Pipes/Interceptors — cross-cutting is dependencies + middleware + exception handlers);
+  - **router composition** — `APIRouter(prefix=..., tags=..., dependencies=[...])` and `include_router` wiring;
+  - **lifespan / app factory** — `lifespan` or `create_app(settings)` for startup/shutdown resources;
+  - **typed settings** — `pydantic-settings` `BaseSettings` behind a `get_settings()` dependency.
 - `.claude/skills/db-write-protocol/SKILL.md` — when the change performs a destructive or migration-class DB write.
 - `.claude/skills/python-best-practices/SKILL.md` — Python code-quality lens for any `apps/api` change: typing, error handling, resource lifetime, async boundaries (load its `topics/*` on demand).
 - `.claude/skills/python-design-patterns/SKILL.md` — when the change adds/refactors Python class/module structure (SOLID, composition, dependency injection, Protocol ports).
 - `.claude/skills/async-python-patterns/SKILL.md` — when the change touches Python asyncio (event loop, `gather`/`TaskGroup`, cancellation, offloading blocking calls).
+- `.claude/skills/pydantic-v2-patterns/SKILL.md` — when the change adds/modifies a FastAPI request/response schema, validator, `model_config`, computed field, DTO-separation boundary, or settings model. Cross-validates the DTO checks in § 4 (Backend "DTOs" + OpenAPI "DTO ↔ contract alignment").
 
 Either tier:
 - `code-simplifier` — obvious cleanup opportunities (nested ternaries, redundant branches, awkward names) — flag as LOW-severity suggestions.
 - `typescript-advanced-types` — non-trivial generics, conditional types, mapped types, or template-literal types.
+- `js-performance-patterns` — when the diff has a hot non-React path (tight loops, large-array transforms, data-structure choice, caching) where runtime cost — not render cost — is the concern; complements `react-performance`.
 
 ### 0.5 Discovery (when Required Reading doesn't cover the surface)
 
-If the change touches a domain not in your Required Reading list, list `.claude/skills/` and identify any skill whose description matches. Read it before evaluating. **Required Reading is the floor, not the ceiling** — when a relevant skill exists, use it instead of inventing your own framing.
+If the change touches a domain not in your Required Reading list, consult `.claude/skills/README.md` (the generated catalog — one-line gist per skill plus the `Applied by` ownership column showing which skills name `code-reviewer` as an owner) and read the matching `SKILL.md` before evaluating. **Required Reading is the floor, not the ceiling** — when a relevant skill exists, use it instead of inventing your own framing.
 
-Subagents work from current canonical sources, not baked-in memory. Repo-conventions is especially load-bearing: a code change can satisfy SOLID/DRY/KISS yet still be wrong-for-this-repo (e.g., a backend service `throw new Error()` instead of `BadRequestException`, or a frontend component mirroring server state into a client store). Catch that here.
+Subagents work from current canonical sources, not baked-in memory. Repo-conventions is especially load-bearing: a code change can satisfy SOLID/DRY/KISS yet still be wrong-for-this-repo (e.g., a backend service raising a bare `Exception`/`ValueError` instead of a mapped FastAPI `HTTPException`, or a frontend component mirroring server state into a client store). Catch that here.
 
 ### 1. Read (RLM-native; branch on change size)
 
@@ -135,17 +144,17 @@ A frontend repo-conventions violation can be HIGH (auth, security, route guards,
 
 #### Backend (apps/api)
 
-- **Errors:** does the code prefer the framework's built-in exceptions (e.g. FastAPI `ForbiddenException`, `BadRequestException`, `NotFoundException`, `HttpException`) over a swallowed or bare `throw new Error(...)`? A bare `throw new Error(...)` from a service typically becomes an opaque 500 with no useful context — flag per whatever `repo-conventions` mandates (commonly **HIGH**).
+- **Errors:** does the code raise FastAPI's `HTTPException` with the right status code — or a domain exception mapped to one via a registered exception handler — rather than a bare/swallowed `raise Exception(...)` / `raise ValueError(...)`? A bare exception escaping a service typically becomes an opaque 500 with no useful context — flag per whatever `repo-conventions` mandates (commonly **HIGH**).
 - **Tenant / org scoping (defense-in-depth):** if the project is multi-tenant, does every tenant-scoped query constrain on the tenant/org key the way `repo-conventions` requires? Is the cross-tenant guard tested? Are any "scope=all"-style escape hatches gated the way the conventions document?
 - **SQL safety (security universal):** ALWAYS parameterized placeholders for any user-derived input — never string-interpolate user input into SQL. String interpolation of user input is **HIGH** regardless of project. Beyond that, follow whatever persistence policy `repo-conventions` documents (e.g. a preferred ORM/repository pattern vs. raw SQL, and when raw SQL is acceptable). Unjustified deviation from the documented persistence pattern = MED.
-- **DTOs:** do DTOs follow the shape `repo-conventions` documents (e.g. plain TypeScript interfaces vs. validated classes), and is user input validated at the boundary the way the conventions require?
+- **DTOs (per `pydantic-v2-patterns` + `repo-conventions`):** do request/response models follow the project's Pydantic v2 shape (DTO separation, `model_config`, field validators) and is user input validated at the boundary the way the conventions require? A schema that bypasses boundary validation or redeclares a shared contract shape is a finding.
 - **Logger:** does logging follow the project's logging convention (logger choice, per-class instantiation, correlation IDs where supported)? Are sensitive fields redacted before logging?
 - **Module load order:** if a new module with migrations or ordering dependencies was added, was the application bootstrap / module import order checked per `repo-conventions`?
 - **Naming:** are the suffix/naming conventions `repo-conventions` documents (e.g. `Service` / `Controller` / `Module` / `Repository` / `Provider` / `Guard`) followed, and discouraged names (e.g. `Manager`/`Helper`/`Util`) avoided?
 
 A backend repo-conventions violation can be HIGH (errors, tenant scoping, parameterized SQL) or MED (DTOs, logger, naming) depending on what the project's conventions designate. Cite the specific rule from the project's `repo-conventions` skill in the finding.
 
-#### OpenAPI contracts (generated OpenAPI client)
+#### OpenAPI contracts (generated OpenAPI client) — per `openapi-contracts`
 
 - **Backward-compat across tiers:** a change to a shared type is a contract change for BOTH the producer (`apps/api`) and the consumer (`apps/web`). A field renamed/removed/retyped in `generated OpenAPI client` that isn't reflected on both sides = **HIGH** (runtime mismatch that the compiler may not catch across a serialization boundary). A widening, additive change is usually safe; a narrowing or breaking change needs both tiers updated in the same PR.
 - **DTO ↔ contract alignment:** backend DTOs and frontend types that mirror a shared contract should derive from (or be checked against) the contract, not redeclare it — flag a redeclared shape that can drift as a SSoT violation (MED).
@@ -168,14 +177,14 @@ The implementation must comply with `CLAUDE.md`'s output contract — not just b
 - **High-risk restate (P3.3):** if change touches auth/sessions/RBAC/payments/secrets/PII/public API/migrations, was the requirements restate done before the code? Missing = HIGH.
 - **Forbidden waiver phrases (P3.2):** does the response contain "small change", "obvious fix", "trivial", "just a refactor"? Each occurrence = MED.
 - **CLAUDE.md layered-router audit (per `documentation-and-adrs` § "Layered-router principle"):** if the diff modifies `CLAUDE.md`, scan the additions for Layer-3 artifact citations: architecture-decision-record IDs, file paths (`src/...`, `apps/...`, `packages/...`, `docs/...`, `.claude/...`), code symbols / decorators / class names, subagent internal step numbers. Each occurrence = **MED**, with the fix being "move the citation to the relevant skill or subagent; CLAUDE.md keeps only the skill/subagent name." Boundary cases — literal command tokens (`git push`, `INSERT`, AI-attribution trailer strings) and structural output labels (`Verified:`, `Path:`, `Design review:`, `Confidence:`) are allowed.
-- **Architecture-decision audit (per `documentation-and-adrs`):** if the diff introduces a structural change — a new persistence layer, new auth library / global guard, app-wide bootstrap modification, new public-API or OpenAPI-contract change, or anything cited from `CLAUDE.md`/`repo-conventions`/skills — and the project records architecture decisions, there MUST be a corresponding decision record in the same PR. Missing record for a structural change = **HIGH**. Additionally, if the diff contradicts an existing accepted decision (enumerate the project's decision records) without a superseding one, that is **HIGH** regardless of code quality — the rationale on file is now wrong.
+- **Architecture-decision audit (per `documentation-and-adrs`):** if the diff introduces a structural change — a new persistence layer, new auth library / global auth dependency or middleware, app-wide bootstrap modification, new public-API or OpenAPI-contract change, or anything cited from `CLAUDE.md`/`repo-conventions`/skills — and the project records architecture decisions, there MUST be a corresponding decision record in the same PR. Missing record for a structural change = **HIGH**. Additionally, if the diff contradicts an existing accepted decision (enumerate the project's decision records) without a superseding one, that is **HIGH** regardless of code quality — the rationale on file is now wrong.
 - **Dependency-rule audit (per `fastapi-clean-architecture`, backend):** for any file under a domain module's `domain/` layer, run a quick import-scan. Each occurrence is its own finding:
-  - `import` from an ORM package (e.g. `@nestjs/typeorm`, `typeorm`) or an `infrastructure/` path inside a `domain/*.ts` file → **HIGH** (domain depends on infrastructure).
-  - `@Injectable()` decorator on a class inside `domain/` → **HIGH** (domain runtime-couples to FastAPI DI).
-  - `import` from `application/` or `api/` inside a `domain/*.ts` file → **HIGH** (inverted dependency).
-  - Application service constructor injecting a concrete repository implementation class instead of the port via an injection token → **HIGH** (bypasses the port; defeats the abstraction).
-  - Module with business invariants (entities with state-transition rules) but no repository-port interface file in `domain/` → **MED** (port-less module; the convention exists for exactly this case).
-  - File-naming inconsistency (e.g., `role.entity.ts` co-existing with `role-entity.ts` in the same module's `domain/entities/`) → **LOW**.
+  - `import sqlalchemy`/`sqlmodel`, a `from fastapi import ...`, or an `infrastructure/` import inside a `domain/*.py` file → **HIGH** (domain depends on infrastructure/framework).
+  - `import` from `application/` or `api/` inside a `domain/*.py` file → **HIGH** (inverted dependency).
+  - Application service receiving a concrete SQLAlchemy/SQLModel repository (constructed directly or `Depends`-injected) instead of the `domain/` protocol port → **HIGH** (bypasses the port; defeats the abstraction).
+  - Application service returning ORM models — or `domain/` entities — directly to the route instead of a response DTO → **HIGH** (leaks persistence/domain across the API seam).
+  - Module with business invariants (entities with state-transition rules) but no repository-protocol port in `domain/repositories/` → **MED** (port-less module; the convention exists for exactly this case).
+  - File-/module-naming inconsistency inside the module (e.g. `role_entity.py` co-existing with `role.py` for the same entity) → **LOW**.
 
 ### 5.5 Apply change-sizing audit
 

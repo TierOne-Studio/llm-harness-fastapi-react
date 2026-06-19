@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "Layered FastAPI modules with route/service/domain/infrastructure dependency rule"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # FastAPI Clean Architecture
