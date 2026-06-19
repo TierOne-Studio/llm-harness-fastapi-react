@@ -11,7 +11,7 @@
 
 import { mkdtempSync, cpSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -66,8 +66,10 @@ try {
   const text = await callModel({ system, prompt, model, backend, maxTokens: 4096, maxTurns: 8 });
   const files = parseFiles(text ?? '');
   for (const f of files) {
-    const dest = join(dir, f.path);
-    if (!dest.startsWith(dir)) continue; // no path escapes
+    // Canonicalize, then require the path-separator boundary — `startsWith(dir)`
+    // alone would admit a sibling like `<dir>-evil`, and `resolve` collapses `../`.
+    const dest = resolve(dir, f.path);
+    if (dest !== dir && !dest.startsWith(dir + sep)) continue;
     mkdirSync(dirname(dest), { recursive: true });
     writeFileSync(dest, f.body);
   }

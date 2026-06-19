@@ -113,7 +113,7 @@ Confidence: 0.XX (your independent judgment of this verdict — calibration anch
 
 If the **same class of acceptance failure recurs across multiple criteria** in one verification — repeated test-theater (green-but-vacuous assertions), repeated surface-drift (a test silently retargeted off the spec'd surface), or an acceptance criterion that *no* test layer can prove because the harness lacks a fixture/seam — surface it as a `### Meta-findings` block (after Recommended closes, before Sources read):
 
-```
+```text
 ### Meta-findings (skill-improvement signal)
 - **Pattern X recurring N times:** <description with test:line citations>. The non-vacuity guidance in `fastapi-testing` / `playwright-best-practices` may need sharpening, or `repo-conventions` a missing fixture convention.
 - **Coverage gap:** <criterion class no layer can prove>. Consider proposing a fixture/harness rule via `meta-skill-hygiene` or `lessons-curator`.

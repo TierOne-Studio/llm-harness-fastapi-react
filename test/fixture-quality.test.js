@@ -24,7 +24,7 @@ function scoreWithMutation(rel, mutate) {
     rmSync(dir, { recursive: true, force: true });
   }
 }
-const didFail = (r, id) => Boolean(r.invariants.find((i) => i.id === id && !i.ok));
+const didFail = (r, id) => r.invariants.some((i) => i.id === id && !i.ok);
 
 test('golden fixture passes every invariant', () => {
   const r = scoreFixture(GOLDEN);

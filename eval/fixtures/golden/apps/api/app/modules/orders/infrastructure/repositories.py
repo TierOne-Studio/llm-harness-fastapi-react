@@ -15,12 +15,14 @@ class SqlAlchemyOrderRepository(OrderRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get(self, order_id: str, organization_id: str) -> Order | None:
-        # always scope by tenant — defense in depth, even behind an auth dependency
+    async def get_for_update(self, order_id: str, organization_id: str) -> Order | None:
+        # `with_for_update()` locks the row for the read-modify-write; always scope
+        # by tenant — defense in depth, even behind an auth dependency.
         result = await self._session.execute(
             select(OrderModel)
             .where(OrderModel.id == order_id)
             .where(OrderModel.organization_id == organization_id)
+            .with_for_update()
         )
         row = result.scalar_one_or_none()
         if row is None:
@@ -32,5 +34,7 @@ class SqlAlchemyOrderRepository(OrderRepository):
             lines=[OrderLine(sku=l.sku, quantity=l.quantity) for l in row.lines],
         )
 
-    async def add(self, order: Order) -> None:
-        self._session.add(OrderModel.from_domain(order))
+    async def save(self, order: Order) -> None:
+        # `merge()` reconciles with the identity map, so persisting a loaded order's
+        # transition is an UPDATE — `add()` here would re-insert the PK and conflict.
+        await self._session.merge(OrderModel.from_domain(order))

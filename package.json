@@ -7,7 +7,7 @@
     "llm-harness-fastapi-react": "bin/cli.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "files": [
     "bin",

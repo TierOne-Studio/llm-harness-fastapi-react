@@ -43,12 +43,15 @@ const dryRun = process.argv.includes('--dry-run');
 // With none, skip cleanly (exit 0) — "not measured", not a failed gate.
 // `--backend` overrides the auto-detection. (--dry-run needs no backend.)
 const { detectBackend } = await import(join(ROOT, 'eval', 'lib.mjs'));
+const explicitBackend = valueAfter('--backend');
 const detected = detectBackend();
-if (!dryRun && !detected) {
+// Skip only when there's genuinely no backend AND none was forced — an explicit
+// `--backend` must be honored even if auto-detection found nothing.
+if (!dryRun && !explicitBackend && !detected) {
   console.log('SKIP: mutation-test — no live backend (no ANTHROPIC_API_KEY, no claude CLI).');
   process.exit(0);
 }
-const backendArg = valueAfter('--backend') || detected || 'cli';
+const backendArg = explicitBackend || detected || 'cli';
 
 const MUTATIONS = [
   {

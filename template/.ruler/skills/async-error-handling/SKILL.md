@@ -239,6 +239,6 @@ Backend (commonly `apps/api`):
 - `repo-conventions` § "Error handling" — the error surfaces this codebase uses (FastAPI exception types on the backend; toast, error boundary, query error state on the frontend).
 - `failure-mode-analysis` — `network` and `partial` categories enumerate failure modes this skill helps handle.
 - `react-data-fetching` — TanStack Query patterns and error-state UX (frontend).
-- `fastapi-patterns/patterns/cross-cutting.md` — exception filter is the boundary handler (backend).
+- `fastapi-patterns` — `Depends`/`Security` composition and registered exception handlers: where a propagated backend error becomes an HTTP response (the boundary).
 - `database-transactions` — error flow across transaction boundaries; an in-flight failure must roll back, not be swallowed (backend).
 - `CLAUDE.md` P5 — fail-fast, no retries, root-cause focus.

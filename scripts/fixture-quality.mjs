@@ -47,6 +47,69 @@ const WRONG_STACK = [
 const importLines = (text) =>
   text.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('import ') || l.startsWith('from '));
 
+const rels = (fs) => fs.map((f) => f.rel).join(', ');
+
+// Each invariant is its own small function (ctx = { files, py, layer }) so the
+// orchestrator stays trivial and each rule is independently readable/measurable.
+function invDomainPurity({ layer }) {
+  const domain = layer('domain');
+  const bad = domain.filter((f) => importLines(f.text).some((l) => /\b(?:fastapi|sqlalchemy|sqlmodel)\b/.test(l)));
+  return { id: 'domain-purity', ok: bad.length === 0,
+    detail: bad.length ? `domain imports framework/ORM: ${rels(bad)}` : `${domain.length} domain file(s) pure` };
+}
+function invNoSqlInRouters({ layer, py }) {
+  const api = layer('api').filter(py);
+  const SQL = /\btext\s*\(|\.execute\s*\(|\b(?:SELECT|INSERT|UPDATE|DELETE)\s/i;
+  const bad = api.filter((f) => SQL.test(f.text));
+  return { id: 'no-sql-in-routers', ok: bad.length === 0,
+    detail: bad.length ? `raw SQL in api/: ${rels(bad)}` : `${api.length} api file(s) SQL-free` };
+}
+function invInfraUsesOrm({ layer, py }) {
+  const infra = layer('infrastructure').filter(py);
+  const ok = infra.length === 0 || infra.some((f) => /\b(?:sqlalchemy|sqlmodel)\b/.test(f.text));
+  return { id: 'infra-uses-orm', ok, detail: ok ? 'infrastructure imports SQLAlchemy/SQLModel' : 'no ORM import in infrastructure/' };
+}
+function invApplicationNotInfra({ layer, py }) {
+  const app = layer('application').filter(py);
+  const bad = app.filter((f) => importLines(f.text).some((l) => l.includes('infrastructure')));
+  return { id: 'application-not-infra', ok: bad.length === 0,
+    detail: bad.length ? `application imports infrastructure: ${rels(bad)}` : `${app.length} service file(s) port-only` };
+}
+function invRepoNoCommit({ layer, py }) {
+  const infra = layer('infrastructure').filter(py);
+  const bad = infra.filter((f) => /\.commit\s*\(/.test(f.text));
+  return { id: 'repo-no-commit', ok: bad.length === 0,
+    detail: bad.length ? `repository commits: ${rels(bad)}` : 'repositories do not commit' };
+}
+function invNoWrongStack({ files }) {
+  const bad = [];
+  for (const f of files) {
+    const hit = WRONG_STACK.map((re) => f.text.match(re)).find(Boolean);
+    if (hit) bad.push(`${f.rel} (${hit[0]})`);
+  }
+  return { id: 'no-wrong-stack', ok: bad.length === 0,
+    detail: bad.length ? `wrong-stack tokens: ${bad.join(', ')}` : 'no NestJS/Node residue' };
+}
+function invReactGeneratedClient({ files }) {
+  const feat = files.filter((f) => f.rel.includes('/features/'));
+  if (feat.length === 0) return { id: 'react-generated-client', ok: true, detail: 'no feature files' };
+  const importsGen = feat.some((f) => /from\s+['"][^'"]*generated[^'"]*['"]/.test(f.text));
+  if (!importsGen) return { id: 'react-generated-client', ok: false, detail: 'feature does not import the generated client' };
+  const redeclare = feat.filter((f) => /\b(?:interface|type)\s+OrderRead\b\s*[={]/.test(f.text));
+  if (redeclare.length) return { id: 'react-generated-client', ok: false, detail: `feature redeclares a contract type: ${rels(redeclare)}` };
+  return { id: 'react-generated-client', ok: true, detail: 'feature consumes generated client types' };
+}
+function invPydanticBoundary({ layer, py }) {
+  const schemas = layer('api').filter((f) => py(f) && /schemas?\.py$/.test(f.rel));
+  const ok = schemas.every((f) => /\bBaseModel\b/.test(f.text)); // [].every() is true → empty is fine
+  return { id: 'pydantic-boundary', ok, detail: ok ? 'API DTOs use Pydantic BaseModel' : 'api schemas missing BaseModel' };
+}
+
+const INVARIANTS = [
+  invDomainPurity, invNoSqlInRouters, invInfraUsesOrm, invApplicationNotInfra,
+  invRepoNoCommit, invNoWrongStack, invReactGeneratedClient, invPydanticBoundary,
+];
+
 export function scoreFixture(root) {
   const files = walk(root).map((p) => ({ rel: relative(root, p).split('\\').join('/'), text: readFileSync(p, 'utf8') }));
   const py = (f) => f.rel.endsWith('.py');
@@ -54,68 +117,7 @@ export function scoreFixture(root) {
   // Matching the layer dir, not the `apps/api` workspace, is the whole trick.
   const layer = (s) => files.filter((f) => f.rel.split('/').slice(-2, -1)[0] === s);
 
-  const inv = [];
-  const add = (id, ok, detail) => inv.push({ id, ok, detail });
-
-  // INV1 — domain purity: domain imports no framework/ORM.
-  {
-    const domain = layer('domain');
-    const bad = domain.filter((f) => importLines(f.text).some((l) => /\b(?:fastapi|sqlalchemy|sqlmodel)\b/.test(l)));
-    add('domain-purity', bad.length === 0,
-      bad.length ? `domain imports framework/ORM: ${bad.map((f) => f.rel).join(', ')}` : `${domain.length} domain file(s) pure`);
-  }
-  // INV2 — no raw SQL in routers (api layer).
-  {
-    const api = layer('api').filter(py);
-    const SQL = /\btext\s*\(|\.execute\s*\(|\b(?:SELECT|INSERT|UPDATE|DELETE)\s/i;
-    const bad = api.filter((f) => SQL.test(f.text));
-    add('no-sql-in-routers', bad.length === 0,
-      bad.length ? `raw SQL in api/: ${bad.map((f) => f.rel).join(', ')}` : `${api.length} api file(s) SQL-free`);
-  }
-  // INV3 — infrastructure implements the port via an ORM.
-  {
-    const infra = layer('infrastructure').filter(py);
-    const ok = infra.length === 0 || infra.some((f) => /\b(?:sqlalchemy|sqlmodel)\b/.test(f.text));
-    add('infra-uses-orm', ok, ok ? 'infrastructure imports SQLAlchemy/SQLModel' : 'no ORM import in infrastructure/');
-  }
-  // INV4 — application depends on the port, not the concrete adapter.
-  {
-    const app = layer('application').filter(py);
-    const bad = app.filter((f) => importLines(f.text).some((l) => l.includes('infrastructure')));
-    add('application-not-infra', bad.length === 0,
-      bad.length ? `application imports infrastructure: ${bad.map((f) => f.rel).join(', ')}` : `${app.length} service file(s) port-only`);
-  }
-  // INV5 — repositories don't own the commit (the application service does).
-  {
-    const infra = layer('infrastructure').filter(py);
-    const bad = infra.filter((f) => /\.commit\s*\(/.test(f.text));
-    add('repo-no-commit', bad.length === 0,
-      bad.length ? `repository commits: ${bad.map((f) => f.rel).join(', ')}` : 'repositories do not commit');
-  }
-  // INV6 — no NestJS/Node/Jest residue anywhere.
-  {
-    const bad = [];
-    for (const f of files) for (const re of WRONG_STACK) if (re.test(f.text)) { bad.push(`${f.rel} (${f.text.match(re)[0]})`); break; }
-    add('no-wrong-stack', bad.length === 0, bad.length ? `wrong-stack tokens: ${bad.join(', ')}` : 'no NestJS/Node residue');
-  }
-  // INV7 — React consumes the generated client; no hand-redeclared contract type.
-  {
-    const feat = files.filter((f) => f.rel.includes('/features/'));
-    const importsGen = feat.some((f) => /from\s+['"][^'"]*generated[^'"]*['"]/.test(f.text));
-    const redeclare = feat.filter((f) => /\b(?:interface|type)\s+OrderRead\b\s*[={]/.test(f.text));
-    const ok = feat.length === 0 || (importsGen && redeclare.length === 0);
-    add('react-generated-client', ok,
-      feat.length && !importsGen ? 'feature does not import the generated client'
-        : redeclare.length ? `feature redeclares a contract type: ${redeclare.map((f) => f.rel).join(', ')}`
-          : 'feature consumes generated client types');
-  }
-  // INV8 — Pydantic at the API boundary.
-  {
-    const schemas = layer('api').filter((f) => py(f) && /schemas?\.py$/.test(f.rel));
-    const ok = schemas.length === 0 || schemas.every((f) => /\bBaseModel\b/.test(f.text));
-    add('pydantic-boundary', ok, ok ? 'API DTOs use Pydantic BaseModel' : 'api schemas missing BaseModel');
-  }
-
+  const inv = INVARIANTS.map((check) => check({ files, py, layer }));
   const passed = inv.filter((i) => i.ok).length;
   return { invariants: inv, passed, total: inv.length };
 }

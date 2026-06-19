@@ -123,6 +123,27 @@ for (const [owner, file] of Object.entries(OWNER_FILES)) {
     if (!validSkills.has(m[1])) linkErrors.push(`${label}: cites unknown skill "${m[1]}" (renamed or removed?)`);
   }
 }
+// Also scan each skill's own SKILL.md — skill->skill dead links (e.g. a stale
+// `<skill>/patterns/x.md`) were previously invisible to this lint. In a SKILL.md a
+// bare `sub/file.md` resolves relative to THAT skill (unlike in an agent, where it
+// is ambiguous and forbidden).
+for (const s of skills) {
+  const text = readFileSync(join(SKILLS, s.name, 'SKILL.md'), 'utf8');
+  const label = `skills/${s.name}`;
+  for (const m of text.matchAll(SUB)) {
+    if (!validSkills.has(m[1])) continue;
+    const rel = `${m[1]}/${m[2]}/${m[3]}`;
+    if (!allSkillRel.has(rel)) linkErrors.push(`${label}: references missing skill file "${rel}"`);
+  }
+  for (const m of text.matchAll(BARE)) {
+    const sub = m[0].slice(1, -1); // strip the backticks → e.g. "topics/x.md"
+    const rel = `${s.name}/${sub}`;
+    if (!allSkillRel.has(rel)) linkErrors.push(`${label}: bare sub-path \`${sub}\` doesn't resolve under this skill (${rel} missing)`);
+  }
+  for (const m of text.matchAll(SKILLREF)) {
+    if (!validSkills.has(m[1])) linkErrors.push(`${label}: cites unknown skill "${m[1]}" (renamed or removed?)`);
+  }
+}
 if (linkErrors.length) {
   console.error(`Skill-link check FAILED (${linkErrors.length}):\n  - ${linkErrors.join('\n  - ')}`);
   process.exit(1);

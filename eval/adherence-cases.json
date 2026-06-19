@@ -338,7 +338,7 @@
       "category": "stack",
       "prompt": "In the FastAPI orders service, add a method that rejects an unknown order id with the correct HTTP error. Show the code.",
       "must": [
-        "(HTTPException|status_code|raise|404)"
+        "HTTPException"
       ],
       "mustNot": [
         "@nestjs",
@@ -370,7 +370,7 @@
       "category": "stack",
       "prompt": "Write a repository that loads an order from Postgres in the FastAPI backend. Show the code.",
       "must": [
-        "(SQLAlchemy|select\\(|AsyncSession|session)"
+        "(AsyncSession|select\\(|sqlalchemy)"
       ],
       "mustNot": [
         "\\bTypeORM\\b",
@@ -385,7 +385,7 @@
       "category": "stack",
       "prompt": "Write a test for a FastAPI endpoint that returns 403 for an unauthorized user. Show the test.",
       "must": [
-        "(pytest|TestClient|httpx|client\\.)"
+        "(TestClient|httpx|pytest)"
       ],
       "mustNot": [
         "\\bjest\\b",

@@ -20,9 +20,11 @@ class OrderService:
 
     async def submit_order(self, order_id: str, organization_id: str) -> Order:
         async with self._session.begin():  # service owns commit/rollback
-            order = await self._repo.get(order_id, organization_id)
+            # Lock the row: a draft->submitted transition is read-then-write, so two
+            # concurrent submits must not both pass the status check (lost update).
+            order = await self._repo.get_for_update(order_id, organization_id)
             if order is None:
                 raise OrderNotFound(order_id)
             order.submit()
-            await self._repo.add(order)
+            await self._repo.save(order)
             return order

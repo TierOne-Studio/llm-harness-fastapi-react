@@ -88,12 +88,13 @@ for (const e of dirs) {
   const ownersLine = `  owners: [${OWNERS[name].join(', ')}]`;
 
   const existing = lines.findIndex((l, i) => i > harnessIdx && /^\s+owners:\s*\[/.test(l));
-  if (existing !== -1) {
-    if (lines[existing] !== ownersLine) { lines[existing] = ownersLine; changed++; }
-  } else {
+  if (existing === -1) {
     const gistIdx = lines.findIndex((l, i) => i > harnessIdx && /^\s+gist:/.test(l));
-    const at = gistIdx !== -1 ? gistIdx + 1 : harnessIdx + 1;
+    const at = gistIdx === -1 ? harnessIdx + 1 : gistIdx + 1;
     lines.splice(at, 0, ownersLine);
+    changed++;
+  } else if (lines[existing] !== ownersLine) {
+    lines[existing] = ownersLine;
     changed++;
   }
   writeFileSync(file, lines.join('\n'));

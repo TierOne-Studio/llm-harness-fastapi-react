@@ -4,6 +4,6 @@ import { submitOrder, type OrderRead } from "../../generated/client";
 
 export type { OrderRead };
 
-export function submitOrderRequest(orderId: string, orgId: string): Promise<OrderRead> {
-  return submitOrder(orderId, orgId);
+export function submitOrderRequest(orderId: string): Promise<OrderRead> {
+  return submitOrder(orderId);
 }

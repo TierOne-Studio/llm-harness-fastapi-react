@@ -6,8 +6,10 @@ export interface OrderRead {
   lines: { sku: string; quantity: number }[];
 }
 
-export async function submitOrder(orderId: string, orgId: string): Promise<OrderRead> {
-  const res = await fetch(`/api/orders/${orderId}/submit?org_id=${orgId}`, { method: "POST" });
+// The server derives the tenant from the authenticated session, so the client
+// never sends an org id.
+export async function submitOrder(orderId: string): Promise<OrderRead> {
+  const res = await fetch(`/api/orders/${orderId}/submit`, { method: "POST" });
   if (!res.ok) throw new Error(`submitOrder failed: ${res.status}`);
   return res.json();
 }

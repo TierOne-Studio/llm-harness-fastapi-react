@@ -125,7 +125,7 @@ Confidence: 0.XX (your independent judgment of this verdict — calibration anch
 
 If the **same ambiguity or SPEC↔code drift recurs across SPECs** — the same requirement category is repeatedly underspecified at the clarification gate, or the same kind of change repeatedly ships without a SPEC update — surface it as a `### Meta-findings` block (after the Reconciliation matrix, before Sources read):
 
-```
+```text
 ### Meta-findings (skill-improvement signal)
 - **Pattern X recurring:** <description>. The clarification-gate or sync rules in `spec-workflow` may need sharpening, or `repo-conventions` a missing convention.
 - **Coverage gap:** <recurring underspecification>. Consider proposing a rule via `meta-skill-hygiene` or `lessons-curator`.
