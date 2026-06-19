@@ -90,7 +90,10 @@ jobs:
           node-version: 22
           package-manager-cache: false
       - name: Mutation kill-rate (gate)
-        run: node scripts/mutation-test.mjs --model "claude-haiku-4-5-20251001" | tee eval-mutation.log
+        # pipefail so a non-zero mutation exit (an UNEXPECTED survivor) isn't masked by tee.
+        run: |
+          set -o pipefail
+          node scripts/mutation-test.mjs --model "claude-haiku-4-5-20251001" | tee eval-mutation.log
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - name: Context decay (informative)

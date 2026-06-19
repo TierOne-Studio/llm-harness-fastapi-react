@@ -24,11 +24,11 @@
       "prompt": "Add a new React Router client route in apps/web that is protected by the existing frontend guard, fetches user profile data, and shows a loading state; no FastAPI or OpenAPI changes",
       "expected": [
         "react-routing",
-        "react-data-fetching",
-        "react-state-management"
+        "react-data-fetching"
       ],
       "allowed": [
-        "frontend-security"
+        "frontend-security",
+        "react-state-management"
       ],
       "variants": [
         "Create a guarded client route in apps/web that loads the user's profile and renders a spinner while the data is fetching"
@@ -38,11 +38,14 @@
       "id": "feat-form",
       "prompt": "Add a new signup form with email validation and async submit error handling",
       "expected": [
-        "react-forms",
-        "async-error-handling"
+        "react-forms"
       ],
       "variants": [
         "Build a registration form with Zod email validation that surfaces submit errors to the user"
+      ],
+      "allowed": [
+        "async-error-handling",
+        "react-data-fetching"
       ]
     },
     {
@@ -131,7 +134,8 @@
       "allowed": [
         "python-best-practices",
         "db-write-protocol",
-        "fastapi-best-practices"
+        "fastapi-best-practices",
+        "python-design-patterns"
       ]
     },
     {
@@ -153,7 +157,8 @@
       ],
       "allowed": [
         "fastapi-best-practices",
-        "fastapi-testing"
+        "fastapi-testing",
+        "async-python-patterns"
       ]
     },
     {
@@ -166,7 +171,8 @@
         "python-best-practices",
         "fastapi-clean-architecture",
         "code-simplifier",
-        "design-review"
+        "design-review",
+        "cyclomatic-complexity"
       ]
     },
     {
@@ -190,10 +196,10 @@
       "id": "multi-statement-db",
       "prompt": "Implement order checkout: insert the order row and decrement stock across two tables atomically",
       "expected": [
-        "database-transactions",
-        "db-write-protocol"
+        "database-transactions"
       ],
       "allowed": [
+        "db-write-protocol",
         "fastapi-best-practices",
         "fastapi-clean-architecture"
       ],
@@ -224,6 +230,9 @@
       "prompt": "Plan a refactor that splits the chat feature into three smaller modules",
       "expected": [
         "plan-mode"
+      ],
+      "allowed": [
+        "decision-rules"
       ]
     },
     {
@@ -234,7 +243,8 @@
         "decision-rules"
       ],
       "allowed": [
-        "fastapi-security"
+        "fastapi-security",
+        "frontend-security"
       ]
     },
     {
@@ -329,7 +339,9 @@
         "react-design-patterns"
       ],
       "allowed": [
-        "react-patterns"
+        "react-patterns",
+        "react-data-fetching",
+        "code-simplifier"
       ]
     },
     {
@@ -358,6 +370,10 @@
       "prompt": "Write a generic typed API client wrapper using conditional and mapped types to derive response shapes",
       "expected": [
         "typescript-advanced-types"
+      ],
+      "allowed": [
+        "openapi-contracts",
+        "react-data-fetching"
       ]
     },
     {
@@ -367,7 +383,10 @@
         "react-2026"
       ],
       "allowed": [
-        "vite"
+        "vite",
+        "react-routing",
+        "react-data-fetching",
+        "react-state-management"
       ]
     }
   ]

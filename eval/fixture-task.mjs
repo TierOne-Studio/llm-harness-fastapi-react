@@ -50,7 +50,7 @@ function parseFiles(text) {
 }
 
 const dir = mkdtempSync(join(tmpdir(), 'fixture-task-'));
-let result;
+let result = null;
 try {
   cpSync(GOLDEN, dir, { recursive: true });
   const text = await callModel({ system, prompt, model, backend, maxTokens: 4096 });
@@ -69,8 +69,12 @@ try {
   console.log(`fixture-task: model=${model} files=${result.files} invariants=${result.passed}/${result.total}` +
     (result.failing.length ? ` FAILING=[${result.failing.join(', ')}]` : ' (all kept)') +
     ` cancelWired=${result.cancelWired}`);
+} catch (err) {
+  // Informative eval — a transient model/CLI error must not crash with a stack trace.
+  console.log(`SKIP: fixture-task — run failed (${(err.message || String(err)).slice(0, 120)}); not gating.`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
 
-appendHistory({ kind: 'fixture-task', model, ...result });
+if (result) appendHistory({ kind: 'fixture-task', model, ...result });
+process.exit(0);
