@@ -1,24 +1,51 @@
 {
   "comment": "Canonical routing cases for FastAPI + React harness.",
+  "_notLiveRouted": {
+    "_comment": "Skills intentionally not covered by a live routing case: they force-fire from CLAUDE.md P3.4 on a code-change condition, or trigger on a conversational state, not on description match. Coverage of the description-routed skills is asserted by tests/simulate-prompts.sh.",
+    "skills": {
+      "repo-conventions": "force-fired on every code change (P3.4)",
+      "tdd-workflow": "force-fired on every executable-code change (P3.4)",
+      "design-review": "force-fired before declaring complete (P3.4)",
+      "react-patterns": "force-fired on any UI/component/hook change (P3.4)",
+      "react-state-management": "force-fired on state-placement changes (P3.4)",
+      "accessibility": "force-fired on any UI markup change (P3.4)",
+      "failure-mode-analysis": "force-fired on non-trivial changes (P3.4)",
+      "plan-mode": "force-fired on multi-step/architectural work (P3.4)",
+      "spec-workflow": "force-fired on behavioral changes (P3.1)",
+      "rlm-explore": "triggered by large/unfamiliar context, not a task prompt",
+      "cross-repo-workspace": "triggered by a multi-repo session, not a task prompt",
+      "pushback-templates": "triggered when about to push back on the user, not a task prompt",
+      "vite": "build-tool config skill, loaded on demand within frontend work"
+    }
+  },
   "cases": [
     {
       "id": "feat-route",
       "prompt": "Add a new React Router client route in apps/web that is protected by the existing frontend guard, fetches user profile data, and shows a loading state; no FastAPI or OpenAPI changes",
       "expected": [
         "react-routing",
-        "react-data-fetching",
-        "react-state-management"
+        "react-data-fetching"
       ],
       "allowed": [
-        "frontend-security"
+        "frontend-security",
+        "react-state-management"
+      ],
+      "variants": [
+        "Create a guarded client route in apps/web that loads the user's profile and renders a spinner while the data is fetching"
       ]
     },
     {
       "id": "feat-form",
       "prompt": "Add a new signup form with email validation and async submit error handling",
       "expected": [
-        "react-forms",
-        "async-error-handling"
+        "react-forms"
+      ],
+      "variants": [
+        "Build a registration form with Zod email validation that surfaces submit errors to the user"
+      ],
+      "allowed": [
+        "async-error-handling",
+        "react-data-fetching"
       ]
     },
     {
@@ -107,7 +134,8 @@
       "allowed": [
         "python-best-practices",
         "db-write-protocol",
-        "fastapi-best-practices"
+        "fastapi-best-practices",
+        "python-design-patterns"
       ]
     },
     {
@@ -129,7 +157,32 @@
       ],
       "allowed": [
         "fastapi-best-practices",
-        "fastapi-testing"
+        "fastapi-testing",
+        "async-python-patterns"
+      ]
+    },
+    {
+      "id": "python-design-patterns",
+      "prompt": "Refactor this Python service: replace the growing if/elif type ladder with a strategy, inject the clock and repository as Protocol ports instead of constructing them inside, and favor composition over the deep inheritance chain",
+      "expected": [
+        "python-design-patterns"
+      ],
+      "allowed": [
+        "python-best-practices",
+        "fastapi-clean-architecture",
+        "code-simplifier",
+        "design-review",
+        "cyclomatic-complexity"
+      ]
+    },
+    {
+      "id": "async-python-patterns",
+      "prompt": "This async function calls a blocking requests call and an unbounded asyncio.gather inside the event loop; rework it with TaskGroup, a Semaphore, asyncio.timeout, and run_in_executor for the blocking call",
+      "expected": [
+        "async-python-patterns"
+      ],
+      "allowed": [
+        "python-best-practices"
       ]
     },
     {
@@ -143,12 +196,15 @@
       "id": "multi-statement-db",
       "prompt": "Implement order checkout: insert the order row and decrement stock across two tables atomically",
       "expected": [
-        "database-transactions",
-        "db-write-protocol"
+        "database-transactions"
       ],
       "allowed": [
+        "db-write-protocol",
         "fastapi-best-practices",
         "fastapi-clean-architecture"
+      ],
+      "variants": [
+        "Insert an order and its line items together so a failure rolls back both"
       ]
     },
     {
@@ -164,7 +220,7 @@
     },
     {
       "id": "bug-failing-test",
-      "prompt": "This test is failing intermittently in CI \u2014 investigate the root cause",
+      "prompt": "This test is failing intermittently in CI — investigate the root cause",
       "expected": [
         "bug-investigation"
       ]
@@ -174,6 +230,9 @@
       "prompt": "Plan a refactor that splits the chat feature into three smaller modules",
       "expected": [
         "plan-mode"
+      ],
+      "allowed": [
+        "decision-rules"
       ]
     },
     {
@@ -184,7 +243,8 @@
         "decision-rules"
       ],
       "allowed": [
-        "fastapi-security"
+        "fastapi-security",
+        "frontend-security"
       ]
     },
     {
@@ -260,6 +320,74 @@
       "id": "neg-concept",
       "prompt": "What is dependency injection conceptually?",
       "expected": []
+    },
+    {
+      "id": "ai-streaming-chat",
+      "prompt": "Build a streaming chat UI in React that renders assistant tokens as they arrive and shows a typing indicator",
+      "expected": [
+        "ai-ui-patterns"
+      ],
+      "allowed": [
+        "react-data-fetching",
+        "react-patterns"
+      ]
+    },
+    {
+      "id": "react-custom-hook",
+      "prompt": "Extract this duplicated fetch-and-subscribe logic into a reusable custom hook and a compound component",
+      "expected": [
+        "react-design-patterns"
+      ],
+      "allowed": [
+        "react-patterns",
+        "react-data-fetching",
+        "code-simplifier"
+      ]
+    },
+    {
+      "id": "shadcn-dialog",
+      "prompt": "Add a shadcn dialog and dropdown-menu to the settings page and compose them with existing components",
+      "expected": [
+        "shadcn"
+      ],
+      "allowed": [
+        "accessibility",
+        "tailwind-v4-shadcn"
+      ]
+    },
+    {
+      "id": "tailwind-theme",
+      "prompt": "Configure Tailwind v4 theme tokens and dark mode for the shadcn component library",
+      "expected": [
+        "tailwind-v4-shadcn"
+      ],
+      "allowed": [
+        "shadcn"
+      ]
+    },
+    {
+      "id": "ts-generic-client",
+      "prompt": "Write a generic typed API client wrapper using conditional and mapped types to derive response shapes",
+      "expected": [
+        "typescript-advanced-types"
+      ],
+      "allowed": [
+        "openapi-contracts",
+        "react-data-fetching"
+      ]
+    },
+    {
+      "id": "react-2026-scaffold",
+      "prompt": "Scaffold a new React project on the modern 2026 stack — framework, routing, data layer, and build tool",
+      "expected": [
+        "react-2026"
+      ],
+      "allowed": [
+        "vite",
+        "react-routing",
+        "react-data-fetching",
+        "react-state-management"
+      ]
     }
   ]
 }

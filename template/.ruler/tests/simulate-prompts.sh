@@ -22,6 +22,8 @@ INSTRUCTIONS="$RULER_DIR/instructions.md"
 PASS=0
 FAIL=0
 FAILED=""
+WEAK=0
+WEAK_LIST=""
 
 STOP_WORDS="the a an this that these those is are was were be been being have has had do does did will would could should may might can must shall and or but if then else when while of in on at by for to from with into onto over under up down out off about our we i you they it its their my your add new use using fix update create make build write test"
 
@@ -56,7 +58,13 @@ EOF
   echo "$count"
 }
 
+# A match passes the floor at >=1 keyword overlap, but a single-keyword overlap is
+# a WEAK (fragile) match — it could be a coincidental common word. WEAK matches still
+# pass, but are counted and ratcheted: new ones above MAX_WEAK fail the build, so a
+# weak description can't silently slip through on one shared word. MAX_WEAK only ratchets DOWN.
 THRESHOLD=1
+WEAK_THRESHOLD=2
+MAX_WEAK=9
 check_case() {
   local case_name="$1" prompt="$2" expected_skill="$3"
   local desc
@@ -67,9 +75,12 @@ check_case() {
   fi
   local n
   n=$(match_count "$prompt" "$desc")
-  if [ "$n" -ge "$THRESHOLD" ]; then
+  if [ "$n" -ge "$WEAK_THRESHOLD" ]; then
     echo "PASS: $case_name → $expected_skill ($n keyword(s) matched)"
     PASS=$((PASS+1))
+  elif [ "$n" -ge "$THRESHOLD" ]; then
+    echo "WEAK: $case_name → $expected_skill (single-keyword match — fragile; sharpen the description or the case prompt)"
+    PASS=$((PASS+1)); WEAK=$((WEAK+1)); WEAK_LIST="$WEAK_LIST $case_name:$expected_skill"
   else
     echo "FAIL: $case_name → $expected_skill (only $n keyword(s), need >=$THRESHOLD)"
     echo "  prompt: $prompt"
@@ -336,8 +347,15 @@ check_workflow_chain_mentions "async-flow" \
 # ============================ FINAL REPORT ==================================
 echo
 echo "============================================================"
-echo "Simulation summary: $PASS PASS / $FAIL FAIL"
+echo "Simulation summary: $PASS PASS / $FAIL FAIL ($WEAK weak single-keyword matches; cap $MAX_WEAK)"
 echo "============================================================"
+if [ "$WEAK" -gt "$MAX_WEAK" ]; then
+  echo "RATCHET: $WEAK weak (single-keyword) matches exceed the committed cap of $MAX_WEAK."
+  echo "A case now routes on a single, possibly coincidental keyword. Sharpen the skill"
+  echo "description (add the load-bearing term the prompt uses) or the case prompt — or lower"
+  echo "MAX_WEAK if you just fixed one. Weak cases:$WEAK_LIST"
+  FAIL=$((FAIL+1))
+fi
 if [ $FAIL -gt 0 ]; then
   echo "Failed cases:$FAILED"
   echo

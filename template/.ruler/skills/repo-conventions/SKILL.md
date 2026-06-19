@@ -5,13 +5,14 @@ harness:
   tier: shared
   family: process
   gist: "YOUR repo's binding facts (fill-in skeleton, both tiers + seam)"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier]
 ---
 
 # Repo Conventions (Fullstack)
 
-The grounding skill for *this* fullstack monorepo. Generic advice lives in the stack skills (the `react-*` / `nestjs-*` families); this skill captures the **binding decisions** of *this project* — the choices a contributor cannot infer from generic best practice and must not silently deviate from. Pair it with `tdd-workflow` and `design-review` on any code change. Diverge only with explicit reason and explicit user approval.
+The grounding skill for *this* fullstack monorepo. Generic advice lives in the stack skills (the `react-*` frontend and `fastapi-*` / `python-*` backend families); this skill captures the **binding decisions** of *this project* — the choices a contributor cannot infer from generic best practice and must not silently deviate from. Pair it with `tdd-workflow` and `design-review` on any code change. Diverge only with explicit reason and explicit user approval.
 
-> **How to use this skeleton:** fill in each `<!-- FILL IN: ... -->` with what *your* project actually does. Delete sections that don't apply, add ones that do. The libraries named below (Vite, React Router, Zustand, TanStack Query, React Hook Form, Zod, Tailwind, Radix/shadcn on the frontend; FastAPI, TypeORM/Prisma/Mongoose, pytest/Vitest, JWT on the backend) are *illustrations* — record the ones you actually picked. Document load-bearing decisions as ADRs and cite them here for the *why*; this skill captures the *what*. See `documentation-and-adrs` for the discipline.
+> **How to use this skeleton:** fill in each `<!-- FILL IN: ... -->` with what *your* project actually does. Delete sections that don't apply, add ones that do. The libraries named below (Vite, React Router, Zustand, TanStack Query, React Hook Form, Zod, Tailwind, Radix/shadcn on the frontend; FastAPI, SQLAlchemy/SQLModel + Alembic, Pydantic v2, pytest, JWT on the backend) are *illustrations* — record the ones you actually picked. Document load-bearing decisions as ADRs and cite them here for the *why*; this skill captures the *what*. See `documentation-and-adrs` for the discipline.
 
 ## 0. Domain glossary
 
@@ -58,9 +59,9 @@ The libraries and versions that define how each tier is built. Be specific — v
 
 ### Backend (`apps/api`)
 
-- **Framework:** FastAPI (see `apps/api/package.json` for exact version).
-- **Database / persistence:** <!-- FILL IN: e.g. Postgres + TypeORM, MongoDB + Mongoose, Prisma. State the default and any fallback. -->
-- **Tests:** <!-- FILL IN: e.g. pytest with ts-jest, or Vitest. Where the config lives. -->
+- **Framework:** FastAPI (see `apps/api/pyproject.toml` for exact version).
+- **Database / persistence:** <!-- FILL IN: e.g. Postgres + SQLAlchemy (async) or SQLModel, with Alembic migrations. State the default and any fallback (e.g. raw SQL via `text()`/asyncpg). -->
+- **Tests:** <!-- FILL IN: e.g. pytest + httpx/TestClient, where conftest.py / fixtures live, async test config (anyio/asyncio mode). -->
 - **Other binding choices:** <!-- FILL IN: anything a newcomer would otherwise get wrong. -->
 
 ### Shared / cross-cutting
@@ -154,29 +155,29 @@ The single most error-prone decision in a React app is *where state lives*. A co
 How a FastAPI domain module is structured. A common layout is a 4-layer (presentation / application / domain / infrastructure) split with a dependency rule pointing inward; a simpler feature-folder layout is fine for CRUD-only modules. Pick one and apply it consistently. For depth see `fastapi-clean-architecture` and `fastapi-patterns`.
 
 ```
-apps/api/src/modules/<domain>/
+apps/api/app/modules/<domain>/
 ├── api/
-│   ├── controllers/<domain>.controller.ts
-│   └── dto/<entity>.dto.ts
+│   ├── routes.py          # APIRouter + endpoint handlers
+│   └── schemas.py         # Pydantic v2 request/response models (DTOs)
 ├── application/
-│   └── services/<domain>.service.ts
+│   └── services.py        # use-cases / orchestration; owns the transaction boundary
 ├── domain/
-│   └── repositories/<domain>.repository.interface.ts
-├── infrastructure/
-│   └── persistence/repositories/<domain>.repository.ts
-└── <domain>.module.ts
+│   ├── models.py          # entities, value objects, policies (pure Python)
+│   └── repositories.py    # repository Protocol ports
+└── infrastructure/
+    └── repositories.py    # SQLAlchemy/SQLModel adapters implementing the ports
 ```
 
-<!-- FILL IN: your actual module layout, where cross-cutting code lives (config, decorators, guards, shared utils), and deviations for CRUD vs rich-domain modules. -->
+<!-- FILL IN: your actual module layout, where cross-cutting code lives (config/settings, shared dependencies, middleware, shared utils), and deviations for CRUD vs rich-domain modules. -->
 
 ## 12. RBAC / authz contract
 
-If the app has authorization, this is its most load-bearing backend surface — document the contract so every new route applies it the same way. This is the **real** security boundary behind the frontend's route guards (§ 5). Treat authz as high-risk (defense in depth: guard the route AND scope the query).
+If the app has authorization, this is its most load-bearing backend surface — document the contract so every new route applies it the same way. This is the **real** security boundary behind the frontend's route guards (§ 5). Treat authz as high-risk (defense in depth: authorize the route via its dependency AND scope the query).
 
 <!-- FILL IN: your authz model. Suggested structure below. -->
 
-### Decorator + guard
-<!-- FILL IN: how a route declares its required permission/role, and which guard enforces it. -->
+### Auth dependency
+<!-- FILL IN: how a route declares its required permission/role (e.g. a `Security`/`Depends` dependency or a router-level `dependencies=[...]`), and which dependency enforces it. FastAPI has no Guards — auth is a dependency. -->
 
 ### Scope / tenant resolution
 <!-- FILL IN: how the request's tenant/scope is resolved, the default, and when cross-tenant access is allowed (and who may). -->
@@ -194,56 +195,63 @@ Pick a deliberate hiding-vs-revealing policy (e.g. never return 404 to mask a pe
 
 ### When you write a new route
 1. Declare the required permission/role on the handler — no exceptions for "internal" routes.
-2. Scope every query by the resolved tenant in the service/repository — never trust the guard alone.
+2. Scope every query by the resolved tenant in the service/repository — never trust the auth dependency alone.
 3. Add a negative test (a caller from another tenant / without the permission is rejected).
 
 ## 13. Persistence / repository pattern
 
-A common, testable pattern: define a domain interface (port), implement it with your ORM/driver (adapter), and depend on the interface in service code.
+A common, testable pattern: define a domain **Protocol** port, implement it with SQLAlchemy/SQLModel (adapter), and depend on the protocol in service code.
 
-```ts
-// port (domain)
-export interface I<Domain>Repository {
-  findById(id: string, tenantId: string): Promise<<Domain> | null>;
-}
+```python
+# port (domain) — domain/repositories.py
+from typing import Protocol
 
-// adapter (infrastructure) — inject your ORM repo / db client
-@Injectable()
-export class <Domain>Repository implements I<Domain>Repository {
-  async findById(id: string, tenantId: string) {
-    /* always scope by tenant — defense in depth */
-  }
-}
+class OrderRepository(Protocol):
+    async def get(self, order_id: str, tenant_id: str) -> Order | None: ...
+
+# adapter (infrastructure) — infrastructure/repositories.py
+from sqlalchemy.ext.asyncio import AsyncSession
+
+class SqlAlchemyOrderRepository:          # implements OrderRepository structurally
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get(self, order_id: str, tenant_id: str) -> Order | None:
+        ...  # always filter .where(OrderModel.tenant_id == tenant_id) — defense in depth
 ```
 
-<!-- FILL IN: your default persistence approach, the rules, when a fallback (e.g. raw SQL) is allowed, how migrations run, and any module load-order coupling. -->
+<!-- FILL IN: your default persistence approach (sync vs async session, SQLAlchemy vs SQLModel), the rules, when a fallback (e.g. raw SQL via `text()`) is allowed, how migrations run (Alembic), and any startup/session-factory coupling. -->
 
 Common rules worth adopting:
-- Always scope tenant-owned queries by the tenant id, even behind a route guard.
-- Depend on the interface in service code; wire the concrete via module providers.
-- Parameterize all queries — never interpolate user input into SQL.
+- Always scope tenant-owned queries by the tenant id, even behind an auth dependency.
+- Depend on the protocol in service code; wire the concrete adapter via a FastAPI dependency (`Depends`).
+- Parameterize all queries — use bound parameters / ORM expressions; never f-string user input into SQL.
 - Use a transaction for multi-statement writes (see `database-transactions`).
 
 ## 14. Error handling (backend)
 
-FastAPI ships built-in HTTP exceptions (`NotFoundException`, `ForbiddenException`, `BadRequestException`, …) that auto-map to status codes — a common default. Make it uniform so a plain `Error` never silently becomes an unhelpful 500. This error contract is what the frontend maps in § 10 — keep them in sync.
+FastAPI maps `HTTPException(status_code=...)` to responses; raise it with the right code, or raise a **domain exception** that a registered `@app.exception_handler` maps to an HTTP code. Make it uniform so a bare `raise Exception(...)` never silently becomes an unhelpful 500. This error contract is what the frontend maps in § 10 — keep them in sync.
 
-```ts
-if (!entity) throw new NotFoundException('Entity not found');
-if (!authorized) throw new ForbiddenException('Access denied');
-if (!isValid(input)) throw new BadRequestException('Invalid input');
+```python
+from fastapi import HTTPException, status
+
+if entity is None:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
+if not authorized:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+# input validation is usually automatic via the Pydantic request model (422) — see § 16
 ```
 
-<!-- FILL IN: your error contract — built-in exceptions vs a custom error type, whether you use a global exception filter, and where a plain Error is acceptable (bootstrap/config, outside the request lifecycle). -->
+<!-- FILL IN: your error contract — raise HTTPException directly vs. domain exceptions + exception handlers, whether request validation errors stay 422 or are reshaped, and where a bare exception is acceptable (startup/config, outside the request lifecycle). -->
 
 ## 15. Logger
 
-<!-- FILL IN: your logger choice (FastAPI `Logger`, pino, winston), whether you have request-id/correlation + structured logging, and any redaction helper. -->
+<!-- FILL IN: your logger choice (stdlib `logging`, `structlog`, `loguru`), whether you have request-id/correlation (e.g. via `contextvars`/middleware) + structured logging, and any redaction helper. -->
 
 ### Log-level discipline (adopt or adapt)
 - `debug` — dev-time verbose tracing.
-- `log`/info — normal-flow milestones worth keeping in prod.
-- `warn` — degraded but recoverable / partial failure.
+- `info` — normal-flow milestones worth keeping in prod.
+- `warning` — degraded but recoverable / partial failure.
 - `error` — an exception about to propagate or a genuine failure. Don't log expected conditions (user input errors) at `error`.
 
 ### What to log / never log
@@ -252,9 +260,9 @@ NEVER log: passwords or hashes, session/bearer tokens, API keys, PII, billing da
 
 ## 16. DTOs and validation
 
-Two common FastAPI approaches: (a) `class-validator` decorators + a global `ValidationPipe` (auto-enforced), or (b) plain types/interfaces with manual validation. Pick one and apply it consistently; separate request shapes from response shapes either way, and derive both from the shared contract (§ 17) where practical.
+FastAPI validates any request body/query/path declared as a **Pydantic v2 model** automatically (returning 422 on failure) — there is no separate validation step to wire. Separate request models from response models, declare the response with `response_model=` (or a `-> ResponseModel` return annotation) so only intended fields serialize, and derive both from the shared contract (§ 17) where practical. See `pydantic-v2-patterns`.
 
-<!-- FILL IN: your DTO style (types vs validated classes), whether a global ValidationPipe is in place, and where runtime validation of user input happens. -->
+<!-- FILL IN: your DTO conventions — request vs response model naming, where `model_config` strictness/aliasing is set, and any shared base models. -->
 
 ---
 
@@ -296,15 +304,15 @@ State the naming rules per tier so the codebase stays scannable.
 
 **Backend:** <!-- FILL IN: class suffixes + file casing. Generic starting point: -->
 
-| Suffix | Used for |
+| Name | Used for |
 |---|---|
-| `Service` | Application services (business logic) |
-| `Controller` | HTTP route handlers |
-| `Module` | FastAPI modules |
-| `Repository` | Data-access classes |
-| `Guard` | Auth/permission guards |
+| `<Domain>Service` | Application services / use-cases (business logic) |
+| `router` (`APIRouter`) | HTTP route handlers, in `api/routes.py` |
+| `<Domain>Repository` (Protocol) + `SqlAlchemy<Domain>Repository` | Port + adapter data-access |
+| `<Entity>` / `<Entity>Create` / `<Entity>Read` | Pydantic request/response models |
+| `get_<thing>` | FastAPI dependency providers (`Depends(get_session)`) |
 
-File names kebab-case with explicit suffixes (`<domain>.controller.ts`). Avoid `Manager`/`Helper`/`Util` as primary suffixes — they signal fuzzy responsibility (see `design-review` anti-patterns).
+File and module names `snake_case` (`routes.py`, `services.py`, `repositories.py`); classes `PascalCase`, functions/vars `snake_case` per PEP 8. Avoid `Manager`/`Helper`/`Util` as primary suffixes — they signal fuzzy responsibility (see `design-review` anti-patterns).
 
 ## 20. Anti-patterns (don't do these here)
 

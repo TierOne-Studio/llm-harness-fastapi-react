@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Plans for 3+ step / multi-file / architectural work"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # Plan Mode

@@ -10,7 +10,7 @@
 // Zero dependencies. Run via `npm run catalog` / `npm run catalog:check`.
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -34,11 +34,13 @@ function frontmatter(text, file) {
   if (close === -1) throw new Error(`Unclosed frontmatter: ${file}`);
   const fm = lines.slice(1, close);
   const get = (re) => fm.map((l) => l.match(re)).find(Boolean)?.[1] ?? null;
+  const ownersRaw = get(/^\s+owners:\s*\[(.*)\]\s*$/);
   return {
     name: get(/^name:\s*(.+)$/),
     tier: get(/^\s+tier:\s*(\S+)/),
     family: get(/^\s+family:\s*(\S+)/),
     gist: get(/^\s+gist:\s*"(.+)"\s*$/),
+    owners: ownersRaw == null ? null : ownersRaw.split(',').map((s) => s.trim()).filter(Boolean),
   };
 }
 
@@ -50,6 +52,9 @@ const skills = readdirSync(SKILLS, { withFileTypes: true })
     for (const k of ['name', 'tier', 'family', 'gist']) {
       if (!meta[k]) throw new Error(`Skill ${e.name}: missing harness ${k} in frontmatter`);
     }
+    if (!meta.owners || meta.owners.length === 0) {
+      throw new Error(`Skill ${e.name}: missing harness owners in frontmatter (every skill needs ≥1 functional owner)`);
+    }
     if (meta.name !== e.name) throw new Error(`Skill dir ${e.name} ≠ frontmatter name ${meta.name}`);
     return meta;
   });
@@ -57,6 +62,125 @@ const skills = readdirSync(SKILLS, { withFileTypes: true })
 const known = new Set(FAMILIES.map(([f]) => f));
 for (const s of skills) {
   if (!known.has(s.family)) throw new Error(`Skill ${s.name}: unknown family "${s.family}"`);
+}
+
+// --- Ownership enforcement (structural invariant; runs in BOTH modes) ---
+// Every declared owner must actually reference the skill slug in its profile,
+// so "all skills are used by their corresponding agent" can't silently drift.
+const RULER = join(here, '..', 'template', '.ruler');
+const OWNER_FILES = {
+  main: join(RULER, 'instructions.md'),
+  'spec-steward': join(RULER, 'agents', 'spec-steward.md'),
+  'architect-reviewer': join(RULER, 'agents', 'architect-reviewer.md'),
+  'code-reviewer': join(RULER, 'agents', 'code-reviewer.md'),
+  'qa-validator': join(RULER, 'agents', 'qa-validator.md'),
+  'security-reviewer': join(RULER, 'agents', 'security-reviewer.md'),
+  'acceptance-verifier': join(RULER, 'agents', 'acceptance-verifier.md'),
+  'lessons-curator': join(RULER, 'agents', 'lessons-curator.md'),
+};
+const ownerText = {};
+const readOwner = (o) => (ownerText[o] ??= readFileSync(OWNER_FILES[o], 'utf8'));
+const ownershipErrors = [];
+for (const s of skills) {
+  for (const o of s.owners) {
+    if (!OWNER_FILES[o]) { ownershipErrors.push(`${s.name}: unknown owner "${o}"`); continue; }
+    if (!readOwner(o).includes(s.name)) {
+      const where = o === 'main' ? 'instructions.md' : `agents/${o}.md`;
+      ownershipErrors.push(`${s.name}: declared owner "${o}" does not reference the skill — wire it into ${where}`);
+    }
+  }
+}
+if (ownershipErrors.length) {
+  console.error(`Skill ownership check FAILED (${ownershipErrors.length}):\n  - ${ownershipErrors.join('\n  - ')}`);
+  process.exit(1);
+}
+
+// --- Broken skill-link lint (structural invariant; runs in BOTH modes) ---
+// Catches agents/instructions that cite skill files which don't exist — e.g. a
+// `fastapi-patterns/patterns/cross-cutting.md` left over from a port, or a bare
+// sub-path with no owning skill. Without this, dead pointers route reviewers to
+// nothing and read as coverage. Skill names are validated too (catches typos/renames).
+const validSkills = new Set(skills.map((s) => s.name));
+const allSkillRel = new Set(
+  readdirSync(SKILLS, { recursive: true }).map((p) => String(p).split(sep).join('/')),
+);
+const SUB = /\b([a-z0-9][a-z0-9-]*)\/(patterns|rules|topics)\/([A-Za-z0-9._-]+\.md)/g;       // prefixed sub-path
+const BARE = /`(patterns|rules|topics)\/[A-Za-z0-9._-]+\.md`/g;                              // bare, unresolvable
+const SKILLREF = /(?:\.claude\/skills\/|`)([a-z0-9][a-z0-9-]*)\/SKILL\.md/g;                 // skill-name citation
+const linkErrors = [];
+for (const [owner, file] of Object.entries(OWNER_FILES)) {
+  const text = readFileSync(file, 'utf8');
+  const label = owner === 'main' ? 'instructions.md' : `agents/${owner}.md`;
+  for (const m of text.matchAll(SUB)) {
+    if (!validSkills.has(m[1])) continue; // not a skill-prefixed path
+    const rel = `${m[1]}/${m[2]}/${m[3]}`;
+    if (!allSkillRel.has(rel)) linkErrors.push(`${label}: references missing skill file "${rel}"`);
+  }
+  for (const m of text.matchAll(BARE)) {
+    linkErrors.push(`${label}: bare sub-path ${m[0]} — prefix with the owning skill (e.g. \`react-design-patterns/patterns/compound.md\`)`);
+  }
+  for (const m of text.matchAll(SKILLREF)) {
+    if (!validSkills.has(m[1])) linkErrors.push(`${label}: cites unknown skill "${m[1]}" (renamed or removed?)`);
+  }
+}
+// Also scan each skill's own SKILL.md — skill->skill dead links (e.g. a stale
+// `<skill>/patterns/x.md`) were previously invisible to this lint. In a SKILL.md a
+// bare `sub/file.md` resolves relative to THAT skill (unlike in an agent, where it
+// is ambiguous and forbidden).
+for (const s of skills) {
+  const text = readFileSync(join(SKILLS, s.name, 'SKILL.md'), 'utf8');
+  const label = `skills/${s.name}`;
+  for (const m of text.matchAll(SUB)) {
+    if (!validSkills.has(m[1])) continue;
+    const rel = `${m[1]}/${m[2]}/${m[3]}`;
+    if (!allSkillRel.has(rel)) linkErrors.push(`${label}: references missing skill file "${rel}"`);
+  }
+  for (const m of text.matchAll(BARE)) {
+    const sub = m[0].slice(1, -1); // strip the backticks → e.g. "topics/x.md"
+    const rel = `${s.name}/${sub}`;
+    if (!allSkillRel.has(rel)) linkErrors.push(`${label}: bare sub-path \`${sub}\` doesn't resolve under this skill (${rel} missing)`);
+  }
+  for (const m of text.matchAll(SKILLREF)) {
+    if (!validSkills.has(m[1])) linkErrors.push(`${label}: cites unknown skill "${m[1]}" (renamed or removed?)`);
+  }
+}
+if (linkErrors.length) {
+  console.error(`Skill-link check FAILED (${linkErrors.length}):\n  - ${linkErrors.join('\n  - ')}`);
+  process.exit(1);
+}
+
+// --- Wrong-stack residue lint (NestJS/Node/Jest terms in a FastAPI + React repo) ---
+// This repo's backend is FastAPI/SQLAlchemy/Pydantic; the inherited harness was NestJS.
+// Banned tokens steer subagents toward the wrong stack. Frontend-legit TS (vitest, Zod,
+// `.test.ts`/`.spec.ts`) is intentionally NOT banned. To keep a deliberate anti-pattern
+// mention (e.g. "don't write `@Injectable`"), put `lint-allow-stack-term` on that line.
+const BANNED = [
+  /@nestjs\b/, /@Injectable\b/, /@InjectRepository\b/, /@InjectDataSource\b/, /@Inject\(/,
+  /\bValidationPipe\b/, /\bNestFactory\b/, /\bScope\.REQUEST\b/, /\bTypeOrmModule\b/,
+  /\bclass-validator\b/, /\bclass-transformer\b/, /\bgetRepository\b/, /\bQueryRunner\b/,
+  /\bTest\.createTestingModule\b/, /\bTestingModule\b/, /\bts-jest\b/, /\bjest\.(?:fn|mock|spyOn)\b/,
+  /\b(?:NotFound|BadRequest|Forbidden|Unauthorized|Conflict|InternalServerError)Exception\b/,
+  /\bHttpException\b/, /\bTypeORM\b/, /\btypeorm\b/, /\bnestjs-[a-z]+\b/,
+  /\.(?:controller|service|module|entity)\.ts\b/, /\.repository\.interface\.ts\b/,
+];
+const ALLOW_MARK = 'lint-allow-stack-term';
+const filesToScan = [
+  ...[...allSkillRel].filter((p) => p.endsWith('.md')).map((p) => [`skills/${p}`, join(SKILLS, ...p.split('/'))]),
+  ...Object.entries(OWNER_FILES).map(([o, f]) => [o === 'main' ? 'instructions.md' : `agents/${o}.md`, f]),
+];
+const stackErrors = [];
+for (const [label, path] of filesToScan) {
+  readFileSync(path, 'utf8').split('\n').forEach((line, i) => {
+    if (line.includes(ALLOW_MARK)) return;
+    for (const re of BANNED) {
+      const m = line.match(re);
+      if (m) { stackErrors.push(`${label}:${i + 1}: wrong-stack term "${m[0]}" — port to FastAPI/Python, or mark the line with ${ALLOW_MARK} if it's deliberate anti-pattern text`); break; }
+    }
+  });
+}
+if (stackErrors.length) {
+  console.error(`Wrong-stack residue check FAILED (${stackErrors.length}):\n  - ${stackErrors.join('\n  - ')}`);
+  process.exit(1);
 }
 
 const byFamily = (f) => skills.filter((s) => s.family === f).sort((a, b) => a.name.localeCompare(b.name));
@@ -81,6 +205,19 @@ const tables = FAMILIES.map(([f, emoji, title]) => {
   ].join('\n');
 }).join('\n\n');
 
+const ownershipTable = [
+  '## 🧭 Ownership — every skill maps to the agent(s) that apply it',
+  '',
+  'Derived from each skill\'s `harness.owners`. `main` is the implementer (instructions.md);',
+  'the rest are the review/verify subagents that apply the skill at their phase. `catalog:check`',
+  'fails if a skill has no owner or a declared owner stops referencing it.',
+  '',
+  '| Skill | Applied by (owners) |',
+  '|---|---|',
+  ...[...skills].sort((a, b) => a.name.localeCompare(b.name))
+    .map((s) => `| [${s.name}](./${s.name}/SKILL.md) | ${s.owners.join(', ')} |`),
+].join('\n');
+
 const doc = `# Skill Catalog
 
 <!-- GENERATED FILE — do not edit by hand. Source of truth: each skill's frontmatter
@@ -95,6 +232,8 @@ lives here, not in the filesystem. Depth lives in each skill's \`topics/\` / \`p
 ${mindmap}
 
 ${tables}
+
+${ownershipTable}
 
 ---
 

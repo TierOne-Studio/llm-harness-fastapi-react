@@ -8,6 +8,7 @@ harness:
   tier: shared
   family: language
   gist: "Surgical cleanup of recently-modified code, behavior preserved"
+  owners: [main, code-reviewer]
 ---
 
 # Code Simplifier

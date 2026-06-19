@@ -5,6 +5,7 @@ harness:
   tier: backend
   family: backend-fastapi
   gist: "pytest, TestClient/httpx, dependency overrides, DB isolation, OpenAPI checks"
+  owners: [main, qa-validator]
 ---
 
 # FastAPI Testing
@@ -27,6 +28,8 @@ Use FastAPI dependency overrides to replace auth, current user, settings, DB ses
 - Async services or async DB work: prefer `httpx.AsyncClient` with the repo's ASGI/app fixture and pytest async support.
 - If lifespan resources matter, create the client through the fixture/context that actually runs lifespan startup and shutdown.
 
+If the repo exposes an app factory, build the test app via `create_app(settings)` with deterministic test settings (test DB URL, fake clients, fixed feature flags) and install dependency overrides on that instance — never mutate a process-global app. See `fastapi-patterns` for the factory/override seam.
+
 ## Dependency Override Discipline
 
 - Override the exact dependency function object registered by the route.
@@ -42,7 +45,7 @@ Choose the lowest-cost layer that proves the behavior:
 - Service orchestration: fake repository ports where possible.
 - SQL query, constraints, transaction, migration, or tenant scoping: real test database.
 
-For real DB tests, use transaction rollback, schema-per-test, or disposable containers according to repo convention. Do not point tests at a developer or production database.
+For real DB tests, use transaction rollback, schema-per-test, or disposable containers according to `repo-conventions`. Do not point tests at a developer or production database.
 
 ## Assertions
 
@@ -67,4 +70,4 @@ For a route with auth and persistence, expect at least:
 
 ## Generated Contract Tests
 
-When FastAPI public schemas change, add or run the repo's OpenAPI generation check. The test should fail when generated TypeScript client/types are stale or when a frontend consumer still uses the old field shape.
+When FastAPI public schemas change, add or run the repo's OpenAPI generation check (see `openapi-contracts`). The test should fail when generated TypeScript client/types are stale or when a frontend consumer still uses the old field shape.

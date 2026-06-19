@@ -1,15 +1,18 @@
 ---
 name: async-error-handling
-description: Use when writing or reviewing async code in JavaScript/TypeScript (browser or Python) — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, the few non-React async paths in the frontend, AND FastAPI services, repositories, and external HTTP/DB calls on the backend. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
+description: Use when writing or reviewing async code in JavaScript/TypeScript — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, and the non-React async paths in the frontend. The throw-don't-return-null / catch-at-the-boundary / no-retries philosophy is cross-tier, but native Python asyncio mechanics (event loop, gather/TaskGroup, cancellation, executors) live in async-python-patterns. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
 harness:
   tier: shared
   family: language
   gist: "Promise composition, AbortSignal, where to catch"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # Async Error Handling
 
-The most LLM-error-prone area in JS/TS. The default model habits — wrapping every method in try/catch, returning `null` instead of throwing, defensively retrying — actively violate this codebase's fail-fast principle. This applies on both tiers of a fullstack monorepo: the frontend (commonly `apps/web`) and the backend (commonly `apps/api`). This skill encodes the correct patterns and the failure modes to catch.
+The most LLM-error-prone area in JS/TS. The default model habits — wrapping every method in try/catch, returning `null` instead of throwing, defensively retrying — actively violate this codebase's fail-fast principle. This skill encodes the correct JS/TS patterns and the failure modes to catch.
+
+**Scope.** The *error-flow philosophy* below — throw don't return `null`, catch at the boundary not every layer, no retries, fail fast — is cross-tier and worth reading on either side. But the concrete *mechanics* (Promise composition, `AbortSignal`) are JavaScript/TypeScript. Native **Python asyncio** mechanics on the FastAPI backend (event loop discipline, `gather`/`TaskGroup`, `asyncio.timeout`, cancellation, `run_in_executor`) live in **`async-python-patterns`** — the backend snippets here are TS-style pseudocode kept only to show the shared philosophy in a service/repository/boundary shape.
 
 ## When this fires
 
@@ -25,13 +28,14 @@ The most LLM-error-prone area in JS/TS. The default model habits — wrapping ev
 - Single `await` followed by `return` with no error-flow decision.
 - Synchronous control flow.
 - React lifecycle inside `useEffect` cleanup (just don't crash; framework swallows).
-- FastAPI lifecycle hooks (`onModuleInit`, `onApplicationBootstrap`) — these have framework-defined error semantics; just `await` and let it throw.
+- FastAPI lifespan startup/shutdown — let it throw; the app fails to start, which is correct.
+- Native Python asyncio mechanics (`gather`/`TaskGroup`, `asyncio.timeout`, cancellation, offloading blocking calls) — use `async-python-patterns`.
 
 ## Core rules (override LLM defaults)
 
-1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. On the backend, throw a FastAPI exception (`ForbiddenException`, `BadRequestException`, `NotFoundException`, etc.). On the frontend, throw a typed `Error` (or framework-typed exception per `repo-conventions`) and let TanStack Query / the error boundary / the toast handler surface it.
+1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. On the backend, raise a FastAPI `HTTPException` (or a mapped domain exception). On the frontend, throw a typed `Error` (or framework-typed exception per `repo-conventions`) and let TanStack Query / the error boundary / the toast handler surface it.
 
-2. **Catch at the boundary, not at every layer.** Backend: a repository throws → the service lets it propagate → the controller's exception filter maps it to HTTP. Frontend: a service throws → the query/mutation hook lets it propagate → TanStack Query surfaces `error` via its return value → the consuming component renders an error state. Catching mid-stack only to rethrow is noise.
+2. **Catch at the boundary, not at every layer.** Backend: a repository raises → the service lets it propagate → FastAPI maps it to HTTP (directly via `HTTPException`, or a registered exception handler). Frontend: a service throws → the query/mutation hook lets it propagate → TanStack Query surfaces `error` via its return value → the consuming component renders an error state. Catching mid-stack only to rethrow is noise.
 
 3. **Never catch-and-ignore.** `try { ... } catch {}` is forbidden. If you genuinely don't care about the error, log at `warn` with context AND comment why ignoring is correct.
 
@@ -130,15 +134,15 @@ const { data, error, isLoading } = useQuery({ queryKey: ['project', id], queryFn
 if (error) return <ErrorState error={error} />
 ```
 
-Backend (FastAPI) — service throws a domain exception; FastAPI maps it to HTTP:
+Backend (FastAPI) — service raises; FastAPI maps it to HTTP:
 
-```ts
-// ✅ Repo throws ForbiddenException; service propagates; FastAPI maps to 403
-async findOne(id: string, organizationId: string) {
-  const project = await this.repo.findById(id, organizationId)
-  if (!project) throw new NotFoundException(`Project ${id} not found`)
-  return project
-}
+```python
+# ✅ Repo returns None; service raises HTTPException; FastAPI maps to 404
+async def get_one(self, id: str, organization_id: str) -> Project:
+    project = await self._repo.find_by_id(id, organization_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail=f"Project {id} not found")
+    return project
 ```
 
 ### Valid reasons to catch
@@ -178,7 +182,7 @@ async fetchExternal(query: string, signal?: AbortSignal): Promise<Result> {
   const timeoutSignal = AbortSignal.timeout(5_000)
   const combined = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
   const res = await fetch(this.url, { signal: combined })
-  if (!res.ok) throw new HttpException(`upstream ${res.status}`, res.status)
+  if (!res.ok) throw new Error(`upstream ${res.status}`)
   return res.json()
 }
 ```
@@ -226,14 +230,15 @@ Frontend (commonly `apps/web`):
 Backend (commonly `apps/api`):
 
 - Service-level parallel per-source search across a data-source array — should use `Promise.allSettled` so one source's failure doesn't blank the response. Filter to `ready` sources first (per `repo-conventions`).
-- Repository methods (`*.database-repository.ts`) — let DB errors propagate; the service throws domain exceptions (`NotFoundException` etc.); the exception filter maps to HTTP.
-- External HTTP calls — wrap in `AbortSignal.timeout()`; throw `HttpException` on non-2xx; let it propagate.
+- Repository methods (`infrastructure/repositories.py`) — let DB errors propagate; the service raises `HTTPException` (or a mapped domain exception); FastAPI maps to HTTP.
+- External HTTP calls (frontend) — wrap in `AbortSignal.timeout()`; throw a typed `Error` on non-2xx; let it propagate.
 
 ## Cross-references
 
+- `async-python-patterns` — the Python asyncio counterpart (event loop, `gather`/`TaskGroup`, cancellation, executors); the right skill for FastAPI/Python backend async.
 - `repo-conventions` § "Error handling" — the error surfaces this codebase uses (FastAPI exception types on the backend; toast, error boundary, query error state on the frontend).
 - `failure-mode-analysis` — `network` and `partial` categories enumerate failure modes this skill helps handle.
 - `react-data-fetching` — TanStack Query patterns and error-state UX (frontend).
-- `fastapi-patterns/patterns/cross-cutting.md` — exception filter is the boundary handler (backend).
+- `fastapi-patterns` — `Depends`/`Security` composition and registered exception handlers: where a propagated backend error becomes an HTTP response (the boundary).
 - `database-transactions` — error flow across transaction boundaries; an in-flight failure must roll back, not be swallowed (backend).
 - `CLAUDE.md` P5 — fail-fast, no retries, root-cause focus.

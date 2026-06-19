@@ -44,7 +44,7 @@ REQUIRED for changes touching any of the following. Surfaces are grouped by tier
 - **JWT / session issuance** — token signing, claims, expiry.
 - **RBAC / multi-tenancy** — authz/scope contracts, organization/tenant boundaries, ownership checks, cross-tenant leakage.
 - **Public API surface** — anything reachable from outside the trust boundary (controllers, queue consumers, webhook handlers).
-- **Guards / Pipes / Interceptors** — FastAPI cross-cutting auth/validation primitives.
+- **Auth dependencies & middleware** — `Depends`/`Security` auth dependencies, router-level `dependencies=[...]`, and ASGI middleware (FastAPI's cross-cutting auth/validation mechanism — there are no Guards/Pipes/Interceptors).
 - **Database access** — query construction, transaction boundaries on permission-bearing writes.
 
 ### OpenAPI contracts (`generated OpenAPI client`)
@@ -85,16 +85,21 @@ Before evaluating, MUST Read:
 - `bundle-size` — when a new dep is added (supply chain).
 
 *Backend (`apps/api`):*
+- `.claude/skills/fastapi-security/SKILL.md` — the canonical backend security source when the diff touches `apps/api`: OAuth2/JWT/session cookies, `Security`/`Depends` auth dependencies, RBAC + tenant scoping, CORS/CSRF, request validation, SQL injection, secret handling, file uploads, rate limiting, and OpenAPI security schemes. Apply its checklist directly; the OWASP/RBAC steps below cross-validate it.
+- `.claude/skills/pydantic-v2-patterns/SKILL.md` — when the change adds/modifies a request model: confirm untrusted input is validated at the boundary (types, constraints, `model_config` strictness) rather than trusted downstream. A model that accepts unvalidated free-form input is an injection/abuse surface.
 - `.claude/skills/database-transactions/SKILL.md` — when the change includes multi-statement DB writes. Partial-state windows are security-adjacent: a half-committed permission grant is a privilege-escalation surface. Verify: (a) atomic boundary present, (b) the tenant-scoping predicate is applied inside the transaction, (c) no external HTTP inside the transaction (DoS amplifier). See also `db-write-protocol`.
 - `.claude/skills/async-error-handling/SKILL.md` — when the change adds outbound calls or auth flows: missing timeouts on auth-related I/O are a DoS surface; catch-and-swallow on auth checks can silently bypass policy.
-- `.claude/skills/fastapi-best-practices/SKILL.md` § security rules — cross-check against `rules/security-auth-jwt.md`, `rules/security-rate-limiting.md`, `rules/security-sanitize-output.md`, `rules/security-use-guards.md`, `rules/security-validate-all-input.md` for FastAPI-specific security checks beyond generic OWASP. Also relevant: `fastapi-clean-architecture`, `python-best-practices`.
-- `.claude/skills/fastapi-patterns/patterns/cross-cutting.md` — when the change adds/modifies a Guard, Pipe, or Interceptor in an auth-relevant flow. The wrong-layer antipattern (authz in interceptor, validation in guard) has security implications: an authorization check in an interceptor runs AFTER guards, defeating the gate.
+- `.claude/skills/fastapi-best-practices/SKILL.md` — its **Hard Rules** + **Common Review Findings** sections catch security-adjacent issues (unvalidated input, leaked internals, missing auth dependency) that complement the dedicated `fastapi-security` skill above. Also relevant: `fastapi-clean-architecture`, `python-best-practices`.
+- `.claude/skills/fastapi-patterns/SKILL.md` § Dependency Composition — when the change adds/modifies an auth dependency or middleware. The wrong-layer antipattern has security implications: authorization done in middleware (which runs before the route is resolved and can't see path/dependency context) or a router-level `dependencies=[...]` assumed-but-not-applied leaves the endpoint unguarded. Verify the auth `Depends`/`Security` actually executes for every protected route.
 
-**Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a generic skill (e.g., `frontend-security`, or `fastapi-best-practices` recommending a global exception filter, swapping the auth library, installing `helmet`/`sanitize-html`, adding CSP header support) recommends a security pattern that would require structural change, **default to the skill** unless that's structural — then **follow the repo for this PR** and flag the adoption as a separate Future task. **Exception:** if a HIGH/CRITICAL security gap exists and the only safe fix is the structural change, surface it as a BLOCK with the structural change required (don't defer security holes for the sake of scope discipline).
+*Shared contract (`generated OpenAPI client`):*
+- `.claude/skills/openapi-contracts/SKILL.md` — when the diff changes a public route, operation ID, or shared DTO: a contract change that alters auth requirements (an endpoint dropped from a security scheme, a field that newly exposes sensitive data) is a security-relevant breaking change. Verify the security posture of the contract is reflected on both tiers.
+
+**Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a generic skill (e.g., `frontend-security`, or `fastapi-security`/`fastapi-best-practices` recommending a global exception handler, swapping the auth library, adding a secure-headers/CSP middleware, or an output-sanitization dependency) recommends a security pattern that would require structural change, **default to the skill** unless that's structural — then **follow the repo for this PR** and flag the adoption as a separate Future task. **Exception:** if a HIGH/CRITICAL security gap exists and the only safe fix is the structural change, surface it as a BLOCK with the structural change required (don't defer security holes for the sake of scope discipline).
 
 ### 0.5 Discovery (when Required Reading doesn't cover the surface)
 
-If the change touches a security-adjacent domain not in your Required Reading list, list `.claude/skills/` and identify any skill whose description matches. Read it before evaluating. **Required Reading is the floor, not the ceiling.**
+If the change touches a security-adjacent domain not in your Required Reading list, consult `.claude/skills/README.md` (the generated catalog — one-line gist per skill plus the `Applied by` ownership column showing which skills name `security-reviewer` as an owner) and read the matching `SKILL.md` before evaluating. **Required Reading is the floor, not the ceiling.**
 
 If the project defines its own RBAC/authz contract (it may differ from generic OWASP advice), read it in `repo-conventions` before lensing.
 
@@ -159,9 +164,9 @@ Steps:
    | New dep present, evidence is in PR body / commit but vague (no explicit `approve` or `Approach gate` ask) | **MED** | Approval likely happened but is unauditable. Request the engineer paste the relevant Plan/asks-first transcript. |
    | New dep present, clear `Awaiting approval` line + user `approve`/`yes` reply visible in trail | **PASS** | No finding. Note the approval citation in the verdict. |
    | Dep is security-sensitive (auth, crypto, parsing untrusted input, network client) AND no evidence | **CRITICAL** | Auth/crypto deps require approval AND a CVE/maintenance audit. Block. |
-   | Only transitive lockfile changes (package.json unchanged) | LOW informational | Note in verdict; not a gate violation. |
+   | Only transitive lockfile changes (`package.json` / `pyproject.toml` manifest unchanged) | LOW informational | Note in verdict; not a gate violation. |
 
-4. **Cross-check against `fastapi-best-practices` asks-first rules** (backend deps). If the new dep is one of the 9 catalogued in `fastapi-best-practices/SKILL.md` (e.g., `nestjs-pino`, `class-validator`, `@nestjs/event-emitter`, `nestjs-cls`, `@nestjs/config`, `dataloader`, `@nestjs/terminus`, `helmet`, `bullmq`), the corresponding rule's `Approach gate` MUST have been resolved. If the rule was bypassed (no Approach A vs B discussion in the trail), this is **HIGH** regardless of whether the dep itself is security-sensitive — it indicates the engineer didn't honor the project's structural-decision discipline.
+4. **Security audit of new backend dependencies** (per `fastapi-security` + `python-best-practices`). For any new Python dependency that touches a trust boundary — auth/JWT (e.g. `pyjwt`, `python-jose`, `authlib`), crypto/password hashing (e.g. `passlib`, `bcrypt`, `argon2-cffi`), parsing of untrusted input, or an outbound network client — confirm: (a) the P0 dependency-approval was obtained, (b) the library is maintained and CVE-clean, and (c) it is wired per `fastapi-security` (password hashing uses a slow KDF; JWT verification checks `alg`/`exp`/`aud`; TLS verification is not disabled). A security-sensitive dependency added without approval evidence is **HIGH** regardless of the library's own safety.
 
 5. **Run `npm audit`** on dep additions; verify Step 2.5 dep-gate audit passed.
 
@@ -177,7 +182,7 @@ A concrete checklist that complements the OWASP lens. Treat every external input
 - Validate all external/user input at the boundary — frontend: routes, form handlers; backend: API routes, queue consumers, webhook handlers.
 - HTTPS for all external communication.
 - Hash passwords with the auth library's bcrypt/scrypt/argon2 (typically handled by the auth library; never roll your own, never store plaintext).
-- Set security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options) — frontend via the host, backend via the app (e.g. `helmet`).
+- Set security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options) — frontend via the host/CDN, backend via ASGI middleware (e.g. a Starlette/`secure` headers middleware or a custom header middleware).
 - Run `npm audit` on dep additions; verify Step 2.5 dep-gate audit passed.
 
 *Frontend (`apps/web`):*

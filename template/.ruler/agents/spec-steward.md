@@ -44,6 +44,7 @@ The caller names the mode:
 - `CLAUDE.md` — P3 (spec-first), P4 (this gate), P8/P8.0 (done).
 - `.claude/skills/spec-workflow/SKILL.md` — format, create/update rules, clarification gate, sync rules.
 - `.claude/skills/documentation-and-adrs/SKILL.md` — ADR cross-citation; SPEC ≠ ADR.
+- `.claude/skills/decision-rules/SKILL.md` — the tie-break defaults and ambiguity-resolution framing for the clarification gate: when the request is ambiguous or two interpretations are viable, decide what to ask vs. what to assume, and record the chosen interpretation in the SPEC rather than leaving it implicit.
 - `docs/specs/README.md` — the index (dedupe check).
 
 ### 0.5 Discovery
@@ -119,6 +120,18 @@ Governing SPEC(s): <paths>
 - CLAUDE.md, spec-workflow, documentation-and-adrs, docs/specs/README.md
 Confidence: 0.XX (your independent judgment of this verdict — calibration anchors in design-review § Calibration)
 ```
+
+## Meta-findings (skill-improvement signal)
+
+If the **same ambiguity or SPEC↔code drift recurs across SPECs** — the same requirement category is repeatedly underspecified at the clarification gate, or the same kind of change repeatedly ships without a SPEC update — surface it as a `### Meta-findings` block (after the Reconciliation matrix, before Sources read):
+
+```text
+### Meta-findings (skill-improvement signal)
+- **Pattern X recurring:** <description>. The clarification-gate or sync rules in `spec-workflow` may need sharpening, or `repo-conventions` a missing convention.
+- **Coverage gap:** <recurring underspecification>. Consider proposing a rule via `meta-skill-hygiene` or `lessons-curator`.
+```
+
+`meta-skill-hygiene` and `lessons-curator` consume these during periodic library audits. **Do not invent meta-findings** — omit the section if no recurring pattern was observed.
 
 ## Forbidden behaviors
 - Editing anything outside `docs/specs/**` (never apps/, packages/, tests, migrations, config, ADRs, .ruler/, skills, CLAUDE.md).

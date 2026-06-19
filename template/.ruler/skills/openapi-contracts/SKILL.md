@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "FastAPI OpenAPI schema as the React contract; generated TypeScript client drift gates"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, security-reviewer]
 ---
 
 # OpenAPI Contracts

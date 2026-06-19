@@ -83,9 +83,11 @@ If the change touches auth/sessions/RBAC/payments/secrets/encryption/PII/public 
 | `react-patterns` | UI/component/hook/rendering changes. |
 | `react-state-management` | Client/server state placement changes. |
 | `accessibility` | UI markup or interactive elements. |
-| `async-error-handling` | Async code. |
+| `async-error-handling` | Async code (JS/TS tier). |
+| `async-python-patterns` | Python asyncio code (event loop, TaskGroup/gather, cancellation, executors). |
 | `fastapi-best-practices` | FastAPI route/router/dependency/application changes. |
 | `python-best-practices` | Python code changes. |
+| `python-design-patterns` | Designing/refactoring Python class/module structure or SOLID/composition/DI decisions. |
 | `openapi-contracts` | FastAPI schema, operation ID, generated client, or FE<->BE contract changes. |
 | `database-transactions` | Multi-statement DB write. |
 | `db-write-protocol` | Any DB write. |
@@ -120,7 +122,38 @@ When fast path escalates mid-task, the next response MUST begin with the exact p
 | User-facing/API behavior change | `acceptance-verifier` LAST |
 | User correction | `lessons-curator` |
 
-Final status is the minimum over reviewers. Any BLOCK means not done.
+### P4.1 Delegation contract (what every subagent invocation MUST carry)
+
+A reviewer runs in fresh context — it knows only what you pass. Every invocation includes:
+- **Task + exact verdict requested** — one line, naming the verdict you want back (e.g. `APPROVE_PLAN?`, `CHANGES REQUESTED?`).
+- **Diff surface** — the changed files and the diff base (branch/commit) to review against; the plan/SPEC path if one exists.
+- **Acceptance criteria** — the SPEC's criteria verbatim (for `qa-validator` / `acceptance-verifier`).
+- **Evidence so far** — suite command(s) already run + results; other reviewers' verdicts this cycle.
+- **Risk surfaces** — which P3.3 surfaces the change touches (auth/RBAC/PII/migration/contract).
+
+A subagent missing any of these states so and reviews what it can — it never guesses silently.
+
+### P4.2 Parallel vs serialized
+
+- **PRE** (`architect-reviewer`, `spec-steward`) run before implementation begins.
+- **POST** `code-reviewer` + `qa-validator` + `security-reviewer` are independent lenses on the same diff — invoke them in parallel (one message, multiple calls).
+- `acceptance-verifier` runs LAST and only after `qa-validator` returns a green static pass (narrow AND-gate); `spec-steward` POST reconciles the SPEC after implementation.
+- Reviewers are READ-ONLY except `spec-steward` (writes `docs/specs/**` only). A reviewer never edits `src/`/tests — you apply the fix, then re-run that reviewer.
+
+### P4.3 Verdict aggregation & done-gating
+
+Each subagent returns one verdict. "Done" requires EVERY triggered reviewer at its clean verdict; any other verdict means not done and names the action you owe.
+
+| Subagent | Clean (proceed / done) | Not done — your action |
+|---|---|---|
+| `architect-reviewer` | APPROVE_PLAN | REVISE_PLAN → revise plan & re-review; BLOCK → redesign |
+| `spec-steward` (PRE) | SYNCED / UPDATED | NEEDS-INPUT → get the user's answer before coding; BLOCK → resolve contradiction |
+| `code-reviewer` | APPROVE | CHANGES REQUESTED → fix & re-review; BLOCK → fix the HIGH issue |
+| `qa-validator` | PASS | GAPS → add the missing tests; BLOCK → fix code + tests |
+| `security-reviewer` | APPROVE | CHANGES REQUESTED → fix; BLOCK → fix the HIGH/CRITICAL |
+| `acceptance-verifier` | ACCEPTED | GAPS → cover the criterion; BLOCK → author/run the missing/fixed test |
+
+Final status is the minimum over reviewers. Any BLOCK means not done — and so does any REVISE_PLAN, CHANGES REQUESTED, GAPS, or NEEDS-INPUT: never declare done while review debt is open. Skipping a *triggered* reviewer is not allowed; not running an *untriggered* one is fine.
 
 ## P5 — OPERATING MINDSET
 
@@ -156,14 +189,22 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 | FastAPI route/router/dependency/app setup | `fastapi-best-practices` + `fastapi-patterns` |
 | New FastAPI domain module | `fastapi-clean-architecture` |
 | Python code/tooling | `python-best-practices` |
+| Python class/module design, SOLID, DI, composition | `python-design-patterns` |
+| Python asyncio (event loop, TaskGroup/gather, cancellation, executors) | `async-python-patterns` |
 | Pydantic schema | `pydantic-v2-patterns` |
 | API security/RBAC/CORS/CSRF | `fastapi-security` |
 | FastAPI tests | `fastapi-testing` |
 | OpenAPI/generated client seam | `openapi-contracts` |
-| React components/state/data/routing/forms/tests | `react-patterns`, `react-state-management`, `react-data-fetching`, `react-routing`, `react-forms`, `react-testing` |
+| React components/state/data/routing/forms/tests | `react-patterns`, `react-design-patterns`, `react-state-management`, `react-data-fetching`, `react-routing`, `react-forms`, `react-testing` |
+| React UI components, styling & AI UX | `shadcn`, `tailwind-v4-shadcn`, `ai-ui-patterns` |
+| New React project / stack modernization | `react-2026` |
+| Advanced TypeScript types (generics/conditional/mapped) | `typescript-advanced-types` |
 | Accessibility/security/bundle/build | `accessibility`, `frontend-security`, `bundle-size`, `vite`, `vitest`, `playwright-best-practices` |
 | DB write/transaction | `db-write-protocol`, `database-transactions` |
-| Design/spec/plan/bugs/decisions | `design-review`, `spec-workflow`, `plan-mode`, `bug-investigation`, `failure-mode-analysis`, `decision-rules` |
+| Design/spec/plan/bugs/decisions/ADRs | `design-review`, `spec-workflow`, `plan-mode`, `bug-investigation`, `failure-mode-analysis`, `decision-rules`, `documentation-and-adrs` |
+| Git/GitHub writes (commit/push/branch/PR/merge) | `git-workflow` |
+| Pushing back (simpler alt / scope creep / risk) | `pushback-templates` |
+| CI pipeline / pre-commit / merge gates | `quality-gates` |
 
 ## WORKFLOW CHAINS
 
@@ -180,10 +221,10 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 `bug-investigation` -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> failing regression test -> minimal fix -> relevant suite -> `design-review` -> triggered reviewers.
 
 ### Refactor
-`plan-mode` -> `tdd-workflow` -> `code-simplifier` / `cyclomatic-complexity` -> `repo-conventions` -> `design-review` -> reviewers if triggered.
+`plan-mode` -> `tdd-workflow` -> `code-simplifier` / `cyclomatic-complexity` -> `python-design-patterns` for backend class/module structure (SOLID/composition/DI) -> `repo-conventions` -> `design-review` -> reviewers if triggered.
 
 ### Performance work
 `rlm-explore` -> `js-performance-patterns` -> `react-performance` for render cost or `bundle-size` for shipped JS -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> measure/fix/verify -> `design-review`.
 
 ### Async / external integration code
-`async-error-handling` -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> FastAPI/React tier skill as relevant -> `design-review`.
+`async-error-handling` (JS/TS tier) or `async-python-patterns` (Python asyncio) -> `failure-mode-analysis` -> `tdd-workflow` -> `repo-conventions` -> FastAPI/React tier skill as relevant -> `design-review`.

@@ -41,11 +41,11 @@ The skill library has dozens of entries spanning both tiers. Reading every `SKIL
 **LOCATE — find candidates by keyword match, not by enumerate-and-load:**
 1. **Memory first:** Read `~/.claude/projects/.../memory/MEMORY.md` (the auto-memory index) and any linked `feedback`-type memory files — the main agent has already captured this correction per `CLAUDE.md` P7. Check for near-duplicates from prior corrections.
 2. **`grep` the correction's keywords** across `CLAUDE.md`, `.claude/skills/`, `.claude/agents/`, and `.claude/settings.json`. Examples: if the correction names "TanStack Query key", grep for `queryKey` and `queryClient`; if it names a database transaction, grep for `transaction`; if it names auth behavior, grep for `auth`. If it names a behavior pattern, grep for that pattern's exact phrasing.
-3. **Match descriptions:** if `grep` is too broad or too narrow, list `.claude/skills/` directories and pattern-match each skill's `description:` frontmatter against the correction's domain. Examples: "this is about route guards" → load `repo-conventions`, `react-routing`, `frontend-security`, `security-reviewer`; "this is about cross-cutting auth" → load `repo-conventions`, `fastapi-patterns` and its `patterns/cross-cutting.md`, `security-reviewer`.
+3. **Match descriptions:** if `grep` is too broad or too narrow, consult `.claude/skills/README.md` (the generated catalog: one-line gist + the `Applied by` owners column per skill) and pattern-match each skill's gist against the correction's domain. Examples: "this is about route guards" → load `repo-conventions`, `react-routing`, `frontend-security`, `security-reviewer`; "this is about cross-cutting auth" → load `repo-conventions`, `fastapi-patterns` (Depends/Security composition + middleware), `fastapi-security`, `security-reviewer`.
 
 **EXTRACT — load only the matches:**
 - Read only the `SKILL.md` files whose descriptions or content matched. Typically 2–5 files for any given correction, not the whole library.
-- For deeper detail, load specific sub-files only if the correction names that area (e.g. a backend rule file under `fastapi-best-practices/rules/*.md`, or a frontend sub-file).
+- For deeper detail, load specific sub-files only if the correction names that area (e.g. a backend `python-best-practices/topics/*.md` deep-dive, or a frontend `react-design-patterns/patterns/*.md` / `react-performance/topics/*.md` sub-file). Backend FastAPI skills (`fastapi-best-practices`, `fastapi-patterns`, `fastapi-security`, `fastapi-testing`) are single flat `SKILL.md` files with `##` sections — cite a section, not a sub-file.
 
 **For library-wide audits (rare):** the full survey (CLAUDE.md + all SKILL.md + settings + agents + hooks-if-present) is appropriate. State explicitly that this is a library-wide audit, not a single-correction proposal.
 
@@ -63,8 +63,8 @@ The library currently includes (for reference, not "load all of these"). Route t
 - **Patterns (specific):** `react-design-patterns` (index → `patterns/<name>.md`: hooks, hoc, render-props, provider, compound, presentational-container, module, mixin, proxy).
 
 **Backend (`apps/api`):**
-- **FastAPI / Node stack:** `fastapi-best-practices`, `fastapi-clean-architecture`, `python-best-practices`.
-- **Tactical patterns:** `fastapi-patterns` — index over `patterns/factory-providers.md`, `patterns/dynamic-modules.md`, `patterns/cross-cutting.md`, `patterns/provider-scopes.md`, `patterns/mixins.md`.
+- **FastAPI / Python stack:** `fastapi-best-practices`, `fastapi-clean-architecture`, `python-best-practices`, `python-design-patterns` (class/module structure, SOLID, DI), `async-python-patterns` (Python asyncio).
+- **Tactical patterns:** `fastapi-patterns` — `Depends`/`Security` composition, `APIRouter` composition, lifespan/app-factory, middleware, background tasks, typed settings (single flat `SKILL.md`).
 - **Data:** `database-transactions`, `db-write-protocol`.
 
 Look for:

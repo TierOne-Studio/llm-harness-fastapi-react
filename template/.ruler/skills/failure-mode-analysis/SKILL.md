@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Edge cases enumerated BEFORE the failing test"
+  owners: [main, architect-reviewer, qa-validator]
 ---
 
 # Failure-Mode Analysis

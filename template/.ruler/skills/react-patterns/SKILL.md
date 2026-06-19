@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Components, hooks, lifting state, refs, lists"
+  owners: [main, architect-reviewer, code-reviewer]
 ---
 
 # React Patterns

@@ -5,10 +5,10 @@ The harness combines guides and sensors.
 ## Skill Families
 
 - Process and discipline: planning, TDD, design review, specs, git workflow, quality gates, repo conventions, RLM exploration.
-- Language and code quality: async error handling, simplification, complexity, JavaScript/TypeScript performance and types.
+- Language and code quality: async error handling (JS/TS), simplification, complexity, JavaScript/TypeScript performance and types.
 - React core: components, state, data fetching, routing, forms, testing, performance, modern React patterns.
 - Frontend platform: accessibility, security, bundle size, Playwright, Vite, Vitest, Tailwind, shadcn, AI UI patterns.
-- FastAPI/Python backend: FastAPI best practices, clean architecture, tactical dependency/router/lifespan patterns, security, testing, Pydantic v2, Python tooling.
+- FastAPI/Python backend: FastAPI best practices, clean architecture, tactical dependency/router/lifespan patterns, security, testing, Pydantic v2, Python tooling/style, Python design patterns (SOLID/DI), and Python asyncio patterns.
 - Data and persistence: database write approval and transaction discipline.
 
 ## Review Flow

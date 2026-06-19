@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "Failing test first, the waiver phrases, the test-quality rubric"
+  owners: [main, architect-reviewer, qa-validator, acceptance-verifier]
 ---
 
 # TDD Workflow
@@ -115,8 +116,8 @@ A test that *passes* is necessary; a test that's *good* is what catches regressi
 8. **No conditional logic in the test.** No `if`/`for`/`switch` in test bodies — those make the test a second implementation that itself can be wrong. Use parameterized tests (`it.each(...)`) instead.
 
 9. **Tests one error path explicitly.** For every non-trivial failure mode (validation failure, downstream timeout, conflict, scope mismatch), have a test that triggers it and asserts on the surfaced error. "It should throw" is not enough — assert on the *kind* of error.
-   - **Bad:** `expect(() => fn(bad)).toThrow()`.
-   - **Good (backend):** `await expect(service.fn(bad)).rejects.toThrow(ForbiddenException)` — assert on the FastAPI built-in exception type the service actually throws (the API tier does not use custom error classes; see `repo-conventions`).
+   - **Bad:** `with pytest.raises(Exception): await service.fn(bad)` — any exception passes; proves nothing.
+   - **Good (backend):** `with pytest.raises(HTTPException) as exc: await service.fn(bad)` then `assert exc.value.status_code == 403` — assert on the status code (or the mapped domain exception type) the service actually raises. See `repo-conventions` for the error contract.
    - **Good (frontend):** assert on the user-visible failure surface — an HTTP status the data layer maps, an error-boundary fallback rendering, or a toast call. See `repo-conventions` for which surface this codebase uses.
 
 10. **Lives next to the code, named consistently.** Match the project's convention for test file location and suffix. If the codebase uses `*.spec.ts`, don't introduce `*.test.ts`.

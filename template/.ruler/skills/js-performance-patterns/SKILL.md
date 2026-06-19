@@ -15,6 +15,7 @@ harness:
   tier: shared
   family: language
   gist: "Hot-path runtime performance — 12 patterns (index + topics)"
+  owners: [main, code-reviewer]
 ---
 
 # JavaScript Performance Patterns

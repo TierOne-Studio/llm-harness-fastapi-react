@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "XSS sinks, `VITE_*` leakage, token storage"
+  owners: [main, architect-reviewer, code-reviewer, security-reviewer]
 ---
 
 # Frontend Security

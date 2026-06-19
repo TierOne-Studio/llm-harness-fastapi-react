@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Semantic HTML, ARIA, focus & keyboard rules for UI changes"
+  owners: [main, architect-reviewer, code-reviewer, qa-validator, acceptance-verifier]
 ---
 
 # Accessibility

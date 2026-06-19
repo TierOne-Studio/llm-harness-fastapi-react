@@ -5,6 +5,7 @@ harness:
   tier: frontend
   family: react-core
   gist: "Vitest + Testing Library + Playwright layer choice"
+  owners: [main, qa-validator, acceptance-verifier]
 ---
 
 # React Testing

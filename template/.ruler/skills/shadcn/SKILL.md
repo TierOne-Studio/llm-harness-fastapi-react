@@ -7,6 +7,7 @@ harness:
   tier: frontend
   family: frontend-platform
   gist: "Day-to-day shadcn component work"
+  owners: [main, code-reviewer]
 ---
 
 # shadcn/ui

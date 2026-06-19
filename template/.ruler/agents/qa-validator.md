@@ -45,10 +45,12 @@ Before evaluating coverage, MUST Read:
 
 - **Frontend (`apps/web`):**
   - `.claude/skills/react-testing/SKILL.md` — Testing Library query priority, layer selection, async assertions.
+  - `.claude/skills/vitest/SKILL.md` — the runner the React unit/component tests execute on: mocking, coverage config, test filtering, fixtures. Cross-check the diff's test setup (mocks, coverage thresholds) against it.
   - `.claude/skills/accessibility/SKILL.md` — semantic queries pull double duty as a11y checks. Force-fire on any UI diff.
 - **Backend (`apps/api`):**
-  - `.claude/skills/fastapi-best-practices/SKILL.md` § test rules — cross-check tests against `rules/test-use-testing-module.md`, `rules/test-mock-external-services.md`, `rules/test-e2e-TestClient/httpx.md` for FastAPI-aware testing patterns.
-  - `.claude/skills/fastapi-clean-architecture/SKILL.md` — when the diff adds files to a module that follows the layered / clean-architecture structure (presence of `domain/repositories/*.repository.interface.ts` is the marker). Per-layer test-shape calibration applies; see § 3 below.
+  - `.claude/skills/fastapi-testing/SKILL.md` — the canonical FastAPI testing source: pytest + `TestClient`/httpx, dependency overrides, app factories, async tests, DB isolation, OpenAPI schema checks, and non-vacuous API assertions. Apply it directly when grading `apps/api` tests.
+  - `.claude/skills/fastapi-best-practices/SKILL.md` § **Verification Checklist** — cross-check the diff's tests against the practices it lists (complements the dedicated `fastapi-testing` skill above).
+  - `.claude/skills/fastapi-clean-architecture/SKILL.md` — when the diff adds files to a module that follows the layered / clean-architecture structure (presence of `domain/repositories/*.py` protocol ports is the marker). Per-layer test-shape calibration applies; see § 3 below.
 
 **Read conditionally:**
 
@@ -60,16 +62,21 @@ Before evaluating coverage, MUST Read:
 *Backend (`apps/api`):*
 - `.claude/skills/database-transactions/SKILL.md` — when DB writes are touched: is a rollback path tested? Is the transactional boundary exercised by a test that triggers an error mid-callback?
 - `.claude/skills/db-write-protocol/SKILL.md` — when the diff introduces or modifies DB writes; verify the tests honor the project's write protocol.
-- `.claude/skills/fastapi-patterns/SKILL.md` — when the diff touches a cross-cutting layer (Guard / Pipe / Interceptor / Middleware): is the negative/unauthorized path tested?
+- `.claude/skills/fastapi-patterns/SKILL.md` — when the diff touches a cross-cutting auth dependency or middleware (`Depends`/`Security`, router-level `dependencies=[...]`, ASGI middleware): is the negative/unauthorized path (401/403) tested?
+- `.claude/skills/async-python-patterns/SKILL.md` — when the diff touches Python asyncio: are timeout, cancellation (`CancelledError`), and bounded-concurrency (`gather`/`TaskGroup`) failure paths tested?
+- `.claude/skills/pydantic-v2-patterns/SKILL.md` — when the diff adds/modifies a request/response model or validator: are the validation failure paths (rejected input, constraint violations, `model_config` strictness) covered by a test, not just the happy path?
+
+*Shared contract (`generated OpenAPI client`):*
+- `.claude/skills/openapi-contracts/SKILL.md` — when the diff changes a public route shape, operation ID, or shared DTO: is there a schema-drift / generated-client freshness check, and do the seam tests assert the contract on both producer and consumer sides?
 
 *Either tier:*
 - `.claude/skills/async-error-handling/SKILL.md` — for the `network` and `partial` failure-mode categories: are timeout failures tested? are partial-success scenarios (e.g. `Promise.allSettled`, unmount mid-fetch) covered?
 
-**Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a test pattern from a generic skill (a React-stack testing skill, or `fastapi-best-practices`) conflicts with `repo-conventions` (e.g., a generic skill recommends a query the repo's setup doesn't support; an e2e setup expects class-validator-decorated DTOs when the repo uses interface DTOs), **default to the skill** unless adopting it would force structural changes to test infrastructure unrelated to the current change. For structural cases, follow the repo's existing test pattern and flag a future task.
+**Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a test pattern from a generic skill (a React-stack testing skill, or `fastapi-best-practices`) conflicts with `repo-conventions` (e.g., a generic skill recommends a Testing Library query the repo's render setup doesn't support; a backend testing skill assumes a sync `TestClient` when the repo standardized on async `httpx.AsyncClient` + `dependency_overrides`), **default to the skill** unless adopting it would force structural changes to test infrastructure unrelated to the current change. For structural cases, follow the repo's existing test pattern and flag a future task.
 
 ### 0.5 Discovery (when Required Reading doesn't cover the surface)
 
-If the change touches a domain not in your Required Reading list, list `.claude/skills/` and identify any skill whose description matches. Read it before evaluating coverage. **Required Reading is the floor, not the ceiling** — when a relevant skill exists, use it.
+If the change touches a domain not in your Required Reading list, consult `.claude/skills/README.md` (the generated catalog — one-line gist per skill plus the `Applied by` ownership column showing which skills name `qa-validator` as an owner) and read the matching `SKILL.md` before evaluating coverage. **Required Reading is the floor, not the ceiling** — when a relevant skill exists, use it.
 
 Subagents work from current canonical sources. If `tdd-workflow` Step 5 grew new items or `failure-mode-analysis` updated its categories, your evaluation must reflect that.
 
@@ -122,13 +129,13 @@ If the diff adds/modifies files in a module that follows the layered / clean-arc
 
 | Layer | Expected test shape | MED finding when missing |
 |---|---|---|
-| `domain/entities/*.entity.ts` | **Pure unit test** — `new Entity(...)` with no FastAPI testing module, no mocks. Asserts invariants, state-transition rules, and value semantics. | Domain entity has business invariants but no `*.entity.spec.ts`, OR the test wraps it in `Test.createTestingModule(...)` (overkill — flag as LOW design noise but still passing). |
-| `domain/repositories/*.repository.interface.ts` | **No test required** (it's an interface). | N/A — interfaces don't get tests. |
-| `application/services/*.service.ts` | **Port-mocked unit test** — inject a hand-rolled mock conforming to the port (`{ findById: jest.fn(), save: jest.fn() }`). DO NOT instantiate the TypeORM adapter; DO NOT use `Test.createTestingModule(...)` with `TypeOrmModule.forRoot()`. | Service test pulls in real TypeORM or instantiates the concrete adapter (defeats the port; coupled to infrastructure). HIGH if the test file imports `*.typeorm-repository.ts` directly. |
-| `infrastructure/persistence/repositories/*.typeorm-repository.ts` | **Integration test** against a real database (testcontainer or shared test DB) with the actual TypeORM `Repository`. Asserts the mapper (`toDomain`/`toPersistence`) round-trips correctly AND any belt-and-suspenders scoping in the `WHERE` clause works. | Adapter has only mocked-TypeORM unit tests (proves nothing about the SQL). MED. |
-| `api/controllers/*.controller.ts` | **e2e via TestClient/httpx** OR controller-only unit test with the application service mocked. Asserts routing, guard wiring, response shape, and HTTP status codes. | Controller has no test that exercises the route end-to-end OR no negative-case test for guard rejection (e.g., 403 for unauthorized access). MED. |
+| `domain/` (entities, value objects, policies) | **Pure unit test** — construct the object directly, no FastAPI app, no DB, no mocks. Asserts invariants, state-transition rules, and value semantics. | Domain object has business invariants but no `test_*.py` unit test, OR the test spins up a `TestClient`/DB session to exercise pure logic (overkill — LOW design noise, still passing). |
+| `domain/repositories/*.py` (Protocol/ABC ports) | **No test required** (it's a protocol). | N/A — protocols don't get tests. |
+| `application/services/*.py` | **Port-mocked unit test** — inject a fake or `unittest.mock` conforming to the protocol port. DO NOT instantiate the SQLAlchemy adapter or open a real session. | Service test constructs the concrete SQLAlchemy repository or opens a real DB session (defeats the port; couples to infrastructure). HIGH if the test imports the `infrastructure/…_repository.py` adapter directly. |
+| `infrastructure/…/*_repository.py` (SQLAlchemy adapters) | **Integration test** against a real database (a test Postgres via testcontainer, or a transaction-rolled-back session fixture). Asserts the mapping round-trips AND any belt-and-suspenders tenant/scope predicate in the query actually filters. | Adapter has only mocked-session unit tests (proves nothing about the SQL). MED. |
+| `api/…/*.py` (routers) | **Integration test via `TestClient`/`httpx`** OR a router-only test with the application service overridden through `dependency_overrides`. Asserts routing, auth-dependency wiring, response shape, and HTTP status codes. | Router has no end-to-end route test, OR no negative-case test for auth rejection (401/403 for unauthorized access). MED. |
 
-The "module follows the layered convention" marker: presence of `domain/repositories/*.repository.interface.ts` files. If the module is flat (a simple-CRUD module with no business invariants), the calibration above does NOT apply — fall back to the standard rubric.
+The "module follows the layered convention" marker: presence of `domain/repositories/*.py` protocol-port files. If the module is flat (a simple-CRUD module with no business invariants), the calibration above does NOT apply — fall back to the standard rubric.
 
 ##### OpenAPI contracts (`generated OpenAPI client`)
 
@@ -204,7 +211,7 @@ Check the response shape against `CLAUDE.md` P8 output contract:
 - **`Design review:` block + `Confidence:` line** present? (Required by P3 — code-reviewer also checks; you cross-validate.)
 - **Tests appear BEFORE implementation** in the response (P8 item 5–6)? Reversed order = LOW.
 - **How to run / verify** section has exact, copy-pasteable commands (P8 item 7)?
-- **Test files match the project's naming/location convention** (`*.spec.ts` / `*.test.ts` consistent with surrounding tests, co-located with source where the tier convention requires) per `repo-conventions`?
+- **Test files match the project's naming/location convention** (backend `test_*.py` under pytest; frontend `*.test.ts(x)` under Vitest and `e2e/*.spec.ts` under Playwright — consistent with surrounding tests, located where the tier convention requires) per `repo-conventions`?
 
 ### 11. Verdict
 

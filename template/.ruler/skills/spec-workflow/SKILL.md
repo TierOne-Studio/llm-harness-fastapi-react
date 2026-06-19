@@ -5,6 +5,7 @@ harness:
   tier: shared
   family: process
   gist: "SPEC before code on behavioral changes; reconcile after"
+  owners: [main, spec-steward]
 ---
 
 # Spec Workflow

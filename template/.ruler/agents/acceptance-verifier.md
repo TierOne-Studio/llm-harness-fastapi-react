@@ -45,15 +45,15 @@ A user-facing/API feature is not done — no "ask the user to test," no PR — u
 - `.claude/skills/repo-conventions/SKILL.md` — RBAC scope contract, when a criterion is permission-bound.
 
 ### 0.5 Discovery
-If the change touches a domain outside the reading list, list `.claude/skills/` and pull any skill whose description matches. Required reading is the floor.
+If the change touches a domain outside the reading list, consult `.claude/skills/README.md` (the generated catalog — one-line gist per skill plus the `Applied by` ownership column showing which skills name `acceptance-verifier` as an owner) and read the matching `SKILL.md`. Required reading is the floor.
 
 ### 1. Build the criteria list
 Extract every acceptance criterion from the plan's verification section into a numbered list. This is the spine of the verdict matrix. If absent for a user-facing/API feature → `BLOCK`.
 
 ### 2. Run the live suite (per tier the criteria touch)
 - UI: `npm run test:e2e` (or the scoped `e2e/` spec) — servers auto-start per `playwright.config.ts` `webServer`.
-- API: the unit/integration command, the real-Postgres integration specs (gated on `DATABASE_URL` — confirm they RAN, not skipped), and TestClient/httpx for endpoint criteria.
-- Capture real pass/fail counts and failing-test names. A spec that exists but wasn't run counts as **zero** coverage. Any failing test = automatic `BLOCK`.
+- API: the pytest unit/integration command, the real-Postgres integration tests (gated on `DATABASE_URL` — confirm they RAN, not skipped), and `TestClient`/`httpx` for endpoint criteria.
+- Capture real pass/fail counts and failing-test names. A test that exists but wasn't run counts as **zero** coverage. Any failing test = automatic `BLOCK`.
 
 ### 3. Map + adversarially check
 For each criterion: find its proving assertion, confirm it ran green, apply the non-vacuity check (UI tautology/hardcode trap AND the shape-only-SQL trap), apply the surface-fidelity check. Assign `PASS` / `UNCOVERED` / `DRIFTED`.
@@ -92,8 +92,8 @@ Live run: <command(s) executed; pass/fail counts; integration specs RAN vs SKIPP
 | # | Acceptance criterion (verbatim from spec) | Proving assertion (file:line) | Ran green? | Non-vacuous? | Surface-faithful? | Status |
 |---|---|---|---|---|---|---|
 | 1 | ... | e2e/.../x.spec.ts:NN | yes | yes | yes | PASS |
-| 2 | ... | x.integration.spec.ts:NN | yes (real PG) | yes | yes | PASS |
-| 3 | ... | y.spec.ts:NN | green | NO — shape-only, SQL never executed | n/a | DRIFTED |
+| 2 | ... | tests/integration/test_x.py::test_y:NN | yes (real PG) | yes | yes | PASS |
+| 3 | ... | tests/.../test_migration.py:NN | green | NO — asserts SQL string shape, migration never executed | n/a | DRIFTED |
 | 4 | ... | — | — | — | — | UNCOVERED |
 
 ### Non-vacuity findings
@@ -108,6 +108,18 @@ Live run: <command(s) executed; pass/fail counts; integration specs RAN vs SKIPP
 
 Confidence: 0.XX (your independent judgment of this verdict — calibration anchors in design-review § Calibration)
 ```
+
+## Meta-findings (skill-improvement signal)
+
+If the **same class of acceptance failure recurs across multiple criteria** in one verification — repeated test-theater (green-but-vacuous assertions), repeated surface-drift (a test silently retargeted off the spec'd surface), or an acceptance criterion that *no* test layer can prove because the harness lacks a fixture/seam — surface it as a `### Meta-findings` block (after Recommended closes, before Sources read):
+
+```text
+### Meta-findings (skill-improvement signal)
+- **Pattern X recurring N times:** <description with test:line citations>. The non-vacuity guidance in `fastapi-testing` / `playwright-best-practices` may need sharpening, or `repo-conventions` a missing fixture convention.
+- **Coverage gap:** <criterion class no layer can prove>. Consider proposing a fixture/harness rule via `meta-skill-hygiene` or `lessons-curator`.
+```
+
+`meta-skill-hygiene` and `lessons-curator` consume these during periodic library audits. **Do not invent meta-findings** — omit the section if no recurring pattern was observed.
 
 ## Forbidden behaviors
 
