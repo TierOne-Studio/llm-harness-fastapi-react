@@ -13,7 +13,8 @@ FastAPI + Pydantic models -> OpenAPI schema -> generated TypeScript client/types
 - Senior-engineer operating profile for FastAPI + React.
 - React skills copied from the existing harness family.
 - New FastAPI/Python/OpenAPI backend skills.
-- Seven review agents: architecture, spec, design, QA, security, acceptance, lessons.
+- Nine `recipe-*` workflow entry points: task, design, plan, build, review, fullstack-implement, diagnose, reverse-engineer, add-integration-tests.
+- Seven review agents (architecture, spec, code, QA, security, acceptance, lessons) plus five read-only workflow agents (requirements-analyzer, codebase-analyzer, document-reviewer, design-sync, quality-runner).
 - CLI `init` / `update` with 3-way merge preservation.
 - Deterministic harness acceptance tests and live-model eval scaffolding.
 
