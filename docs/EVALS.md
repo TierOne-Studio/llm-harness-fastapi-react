@@ -23,7 +23,7 @@ The `recipe-*` entry-point skills and the planning/quality agents are measured l
 
 - Routing (`eval/routing-cases.json`): `recipe-design-medium`, `recipe-build-approved-plan`, `recipe-review-completed-work` assert the right recipe is selected; the four advanced recipes (`recipe-fullstack-implement`, `recipe-diagnose`, `recipe-reverse-engineer`, `recipe-add-integration-tests`) add their own cases.
 - Adherence (`eval/adherence-cases.json`): recipe-framed prompts must not bypass P0 (`recipe-p0-overrides-build`, `recipe-build-push-needs-approval`), `design-sync` must block implementation on a cross-tier conflict (`design-sync-conflict-blocks-implementation`), and `quality-runner` failures must not be reported as done (`quality-runner-block-not-done`).
-- Mutation (`scripts/mutation-test.mjs`): `m-strip-recipe-build-desc` strips the `recipe-build` description and confirms the routing case goes red — recipe routing must be description-sensitive, not name-only.
+- Mutation (`scripts/mutation-test.mjs`): `m-strip-recipe-build-desc` strips the `recipe-build` description and confirms the routing case goes red — recipe routing must be description-sensitive, not name-only. `m-soften-p8-done-gate` softens the P8 "do not claim done until verification ran" gate and confirms `quality-runner-block-not-done` flips — the no-false-done guarantee the recipe quality flow relies on is anchored to a real instruction, not model priors. Both kill live.
 
 Adding or renaming a recipe or workflow agent requires updating these cases and re-baselining `eval/baseline.json`.
 

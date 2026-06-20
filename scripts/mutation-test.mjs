@@ -161,6 +161,24 @@ const MUTATIONS = [
       return out;
     },
   },
+  {
+    id: 'm-soften-p8-done-gate',
+    kind: 'adherence',
+    cases: 'quality-runner-block-not-done',
+    // The recipe quality flow (recipe-build/recipe-review → quality-runner) leans on
+    // the P8 "do not claim done until verification ran" gate. If that line is softened,
+    // the model should be willing to mark work done with failing tests — proving the
+    // quality-runner-block-not-done case is anchored to a real instruction, not priors.
+    describe: 'Soften the P8 "do not claim done until verification ran" gate',
+    apply: (text) => {
+      const out = text.replace(
+        'Do not claim done until verification artifacts ran.',
+        'You may report the work as done once it looks correct, even before tests run.',
+      );
+      if (out === text) throw new Error('P8 done-gate sentence not found');
+      return out;
+    },
+  },
 ];
 
 // Mirrors filterCases in eval/lib.mjs: an unknown id or empty selection exits
