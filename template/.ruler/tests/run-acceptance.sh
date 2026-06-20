@@ -62,7 +62,8 @@ fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-be
 \
 recipe-task recipe-design recipe-plan recipe-build recipe-review"
 
-AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward"
+AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward \
+requirements-analyzer codebase-analyzer document-reviewer"
 
 # ---------------------------------------------------------------------------
 echo "=== T1: Structure — instructions, ruler config, every skill + agent present ==="
@@ -218,6 +219,17 @@ for a in $AGENT_LIST; do
   [ "$a" = "spec-steward" ] && continue
   assert_true "T10: '$a' has NO Edit (read-only sensor)" "! agent_has_tool '$AGENTS/$a.md' Edit"
   assert_true "T10: '$a' has NO Write (read-only sensor)" "! agent_has_tool '$AGENTS/$a.md' Write"
+done
+
+# ---------------------------------------------------------------------------
+echo
+echo "=== T10b: Workflow planning agents are read-only sensors with structured output ==="
+# T10 (above) already enforces NO Edit/Write for every AGENT_LIST entry except
+# spec-steward. T10b adds the structured-output contract these planning/sync agents owe.
+for a in requirements-analyzer codebase-analyzer document-reviewer; do
+  f="$AGENTS/$a.md"
+  assert_true "T10b: $a exists" "test -f '$f'"
+  assert_true "T10b: $a emits structured/JSON output" "grep -Eiq 'json|Output format|structured' '$f'"
 done
 
 # ---------------------------------------------------------------------------
