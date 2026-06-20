@@ -119,6 +119,7 @@ When fast path escalates mid-task, the next response MUST begin with the exact p
 | 3+ files OR auth/PII/RBAC/payments | `code-reviewer` POST |
 | Same conditions, plus any observable behavior change | `qa-validator` POST |
 | Auth, secrets, PII, RBAC, CORS/CSRF, SQL/injection, uploads, deps, OpenAPI security | `security-reviewer` POST |
+| Cross-tier or OpenAPI/contract/schema change | `design-sync` PRE + POST |
 | User-facing/API behavior change | `acceptance-verifier` LAST |
 | User correction | `lessons-curator` |
 

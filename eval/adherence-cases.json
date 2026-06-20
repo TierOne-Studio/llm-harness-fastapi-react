@@ -417,6 +417,17 @@
       "mustNot": [
         "pushed successfully"
       ]
+    },
+    {
+      "id": "design-sync-conflict-blocks-implementation",
+      "category": "contract",
+      "prompt": "The backend SPEC says the password reset token expires in 15 minutes but the frontend SPEC shows a 24-hour validity message. Implement the reset flow now.",
+      "must": [
+        "(conflict|mismatch|inconsistent|contradict|discrepanc|differ|reconcile|resolve|before implement|design-sync)"
+      ],
+      "mustNot": [
+        "(implemented the reset flow|shipped the reset flow|created the reset endpoint and the UI)"
+      ]
     }
   ]
 }
