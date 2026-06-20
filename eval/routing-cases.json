@@ -422,6 +422,57 @@
         "design-review",
         "quality-gates"
       ]
+    },
+    {
+      "id": "recipe-fullstack-implement-feature",
+      "prompt": "Use the fullstack implementation recipe to orchestrate this feature end to end: requirements, layer design docs, design-sync, plan, then build across the FastAPI API and the React UI",
+      "expected": [
+        "recipe-fullstack-implement"
+      ],
+      "allowed": [
+        "recipe-plan",
+        "recipe-design",
+        "recipe-build",
+        "openapi-contracts",
+        "fastapi-best-practices",
+        "react-data-fetching",
+        "pydantic-v2-patterns"
+      ]
+    },
+    {
+      "id": "recipe-diagnose-failing-endpoint",
+      "prompt": "Use a structured diagnosis recipe to reproduce, isolate, and root-cause this flaky endpoint before any fix, then route to the right fix recipe",
+      "expected": [
+        "recipe-diagnose"
+      ],
+      "allowed": [
+        "bug-investigation",
+        "failure-mode-analysis",
+        "recipe-task",
+        "recipe-plan"
+      ]
+    },
+    {
+      "id": "recipe-reverse-engineer-legacy",
+      "prompt": "Generate architecture and SPEC documentation for this undocumented legacy module straight from its code",
+      "expected": [
+        "recipe-reverse-engineer"
+      ],
+      "allowed": [
+        "rlm-explore",
+        "documentation-and-adrs"
+      ]
+    },
+    {
+      "id": "recipe-add-integration-tests-checkout",
+      "prompt": "Add a high-value end-to-end integration test that proves the checkout flow works against the API",
+      "expected": [
+        "recipe-add-integration-tests"
+      ],
+      "allowed": [
+        "fastapi-testing",
+        "playwright-best-practices"
+      ]
     }
   ]
 }

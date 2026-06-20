@@ -60,7 +60,8 @@ shadcn tailwind-v4-shadcn vite vitest \
 database-transactions db-write-protocol fastapi-best-practices fastapi-clean-architecture \
 fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts \
 \
-recipe-task recipe-design recipe-plan recipe-build recipe-review"
+recipe-task recipe-design recipe-plan recipe-build recipe-review \
+recipe-fullstack-implement recipe-diagnose recipe-reverse-engineer recipe-add-integration-tests"
 
 AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward \
 requirements-analyzer codebase-analyzer document-reviewer design-sync quality-runner"
@@ -196,7 +197,8 @@ done
 # ---------------------------------------------------------------------------
 echo
 echo "=== T8b: Recipe skills — referenced in instructions, family process, owners present, P0 dominant ==="
-for r in recipe-task recipe-design recipe-plan recipe-build recipe-review; do
+for r in recipe-task recipe-design recipe-plan recipe-build recipe-review \
+         recipe-fullstack-implement recipe-diagnose recipe-reverse-engineer recipe-add-integration-tests; do
   f="$SKILLS/$r/SKILL.md"
   assert_true "T8b: $r dir + SKILL.md exists" "test -f '$f'"
   assert_true "T8b: $r referenced in instructions.md" "grep -q '$r' '$INSTRUCTIONS'"

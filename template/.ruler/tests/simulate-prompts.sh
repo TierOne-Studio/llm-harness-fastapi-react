@@ -331,6 +331,18 @@ run_case "recipe-build-execute" \
 run_case "recipe-review-work" \
   "Review the completed work for consistency with the design docs and acceptance criteria" \
   "recipe-review"
+run_case "recipe-fullstack" \
+  "Implement a fullstack feature spanning the FastAPI backend, React frontend, OpenAPI contract, and E2E acceptance" \
+  "recipe-fullstack-implement"
+run_case "recipe-diagnose-case" \
+  "Diagnose and root-cause this failing test by reproducing and isolating the smallest failing command" \
+  "recipe-diagnose"
+run_case "recipe-reverse" \
+  "Produce verified SPEC and architecture docs from existing code, distinguishing confirmed from inferred behavior" \
+  "recipe-reverse-engineer"
+run_case "recipe-integration-tests" \
+  "Add minimal high-value integration and E2E tests from acceptance criteria and verify they are non-vacuous" \
+  "recipe-add-integration-tests"
 
 # ============================ FULLSTACK / SEAM ==============================
 echo

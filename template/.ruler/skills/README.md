@@ -3,7 +3,7 @@
 <!-- GENERATED FILE — do not edit by hand. Source of truth: each skill's frontmatter
      (harness: tier/family/gist). Regenerate: npm run catalog. CI fails if stale. -->
 
-55 skills in 6 families. The directories are **flat by requirement** — agent runtimes
+59 skills in 6 families. The directories are **flat by requirement** — agent runtimes
 (Claude Code, Codex, Cursor) discover skills as `skills/<name>/SKILL.md`, so grouping
 lives here, not in the filesystem. Depth lives in each skill's `topics/` / `patterns/` /
 `rules/` files, read on demand. Tier routing rules (what loads when) are in
@@ -25,9 +25,13 @@ mindmap
       plan-mode
       pushback-templates
       quality-gates
+      recipe-add-integration-tests
       recipe-build
       recipe-design
+      recipe-diagnose
+      recipe-fullstack-implement
       recipe-plan
+      recipe-reverse-engineer
       recipe-review
       recipe-task
       repo-conventions
@@ -75,7 +79,7 @@ mindmap
       db-write-protocol
 ```
 
-## 🧭 Process & discipline — apply on any tier (21)
+## 🧭 Process & discipline — apply on any tier (25)
 
 | Skill | What it gives you |
 |---|---|
@@ -91,9 +95,13 @@ mindmap
 | [plan-mode](./plan-mode/SKILL.md) | Plans for 3+ step / multi-file / architectural work |
 | [pushback-templates](./pushback-templates/SKILL.md) | How to disagree: observation, tradeoff, question — one round |
 | [quality-gates](./quality-gates/SKILL.md) | CI, pre-commit & permission-gate templates (deterministic enforcement) |
+| [recipe-add-integration-tests](./recipe-add-integration-tests/SKILL.md) | Integration-test recipe: select minimal high-value integration/E2E tests and verify non-vacuity. |
 | [recipe-build](./recipe-build/SKILL.md) | Build recipe: execute an approved plan task by task with TDD, quality checks, and reviewer gates. |
 | [recipe-design](./recipe-design/SKILL.md) | Design recipe: requirements, codebase facts, SPEC/design docs, document review, and architecture readiness. |
+| [recipe-diagnose](./recipe-diagnose/SKILL.md) | Diagnosis recipe: reproduce, isolate root cause, gather evidence, then route to task or plan. |
+| [recipe-fullstack-implement](./recipe-fullstack-implement/SKILL.md) | Fullstack feature recipe: requirements, layer docs, design-sync, plan, vertical implementation, quality, and acceptance. |
 | [recipe-plan](./recipe-plan/SKILL.md) | Planning recipe: turn approved docs into executable tasks with tests, risks, and verification commands. |
+| [recipe-reverse-engineer](./recipe-reverse-engineer/SKILL.md) | Reverse-engineering recipe: generate verified docs from existing code behavior. |
 | [recipe-review](./recipe-review/SKILL.md) | Review recipe: reconcile code, docs, tests, security, quality gates, and acceptance criteria. |
 | [recipe-task](./recipe-task/SKILL.md) | Small/standard task recipe: path selection, required skills, TDD or waiver, verification, and review. |
 | [repo-conventions](./repo-conventions/SKILL.md) | YOUR repo's binding facts (fill-in skeleton, both tiers + seam) |
@@ -209,9 +217,13 @@ fails if a skill has no owner or a declared owner stops referencing it.
 | [react-routing](./react-routing/SKILL.md) | main, architect-reviewer, code-reviewer, security-reviewer |
 | [react-state-management](./react-state-management/SKILL.md) | main, architect-reviewer, code-reviewer |
 | [react-testing](./react-testing/SKILL.md) | main, qa-validator, acceptance-verifier |
+| [recipe-add-integration-tests](./recipe-add-integration-tests/SKILL.md) | main |
 | [recipe-build](./recipe-build/SKILL.md) | main |
 | [recipe-design](./recipe-design/SKILL.md) | main |
+| [recipe-diagnose](./recipe-diagnose/SKILL.md) | main |
+| [recipe-fullstack-implement](./recipe-fullstack-implement/SKILL.md) | main |
 | [recipe-plan](./recipe-plan/SKILL.md) | main |
+| [recipe-reverse-engineer](./recipe-reverse-engineer/SKILL.md) | main |
 | [recipe-review](./recipe-review/SKILL.md) | main |
 | [recipe-task](./recipe-task/SKILL.md) | main |
 | [repo-conventions](./repo-conventions/SKILL.md) | main, architect-reviewer, code-reviewer, qa-validator, security-reviewer, acceptance-verifier |
