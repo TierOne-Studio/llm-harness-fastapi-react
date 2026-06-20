@@ -313,6 +313,25 @@ run_case "rlm" \
   "I'm new to this repo — help me understand the chat feature's architecture" \
   "rlm-explore,repo-conventions"
 
+# ============================ RECIPES (process) ============================
+echo
+echo "--- Case: recipe routing"
+run_case "recipe-task-small" \
+  "Make this small single-task fix with a clear path selection and review" \
+  "recipe-task"
+run_case "recipe-design-medium" \
+  "Design and scope this medium change before implementation, producing SPEC docs" \
+  "recipe-design"
+run_case "recipe-plan-approved" \
+  "Convert the approved design docs into an implementation plan with tasks and verification commands" \
+  "recipe-plan"
+run_case "recipe-build-execute" \
+  "Execute this approved implementation plan task by task with TDD and reviewer gates" \
+  "recipe-build"
+run_case "recipe-review-work" \
+  "Review the completed work for consistency with the design docs and acceptance criteria" \
+  "recipe-review"
+
 # ============================ FULLSTACK / SEAM ==============================
 echo
 echo "--- Case: cross-repo coordination"

@@ -58,7 +58,9 @@ react-performance react-routing react-state-management react-testing \
 shadcn tailwind-v4-shadcn vite vitest \
 \
 database-transactions db-write-protocol fastapi-best-practices fastapi-clean-architecture \
-fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts"
+fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts \
+\
+recipe-task recipe-design recipe-plan recipe-build recipe-review"
 
 AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward"
 
@@ -188,6 +190,18 @@ for s in tdd-workflow design-review plan-mode repo-conventions react-patterns \
          fastapi-clean-architecture fastapi-patterns fastapi-security fastapi-testing openapi-contracts database-transactions decision-rules spec-workflow; do
   assert_true "T8: instructions.md references '$s' AND its skill dir exists" \
     "grep -q '$s' '$INSTRUCTIONS' && test -d '$SKILLS/$s'"
+done
+
+# ---------------------------------------------------------------------------
+echo
+echo "=== T8b: Recipe skills — referenced in instructions, family process, owners present, P0 dominant ==="
+for r in recipe-task recipe-design recipe-plan recipe-build recipe-review; do
+  f="$SKILLS/$r/SKILL.md"
+  assert_true "T8b: $r dir + SKILL.md exists" "test -f '$f'"
+  assert_true "T8b: $r referenced in instructions.md" "grep -q '$r' '$INSTRUCTIONS'"
+  assert_true "T8b: $r has family: process" "grep -q 'family: process' '$f'"
+  assert_true "T8b: $r declares owners" "grep -q 'owners:' '$f'"
+  assert_true "T8b: $r states P0 dominance" "grep -Eiq 'P0 (safety|remains)' '$f'"
 done
 
 # ---------------------------------------------------------------------------

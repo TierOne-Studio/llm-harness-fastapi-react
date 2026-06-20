@@ -206,6 +206,22 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 | Pushing back (simpler alt / scope creep / risk) | `pushback-templates` |
 | CI pipeline / pre-commit / merge gates | `quality-gates` |
 
+## RECIPE POINTERS
+
+Recipes are entry-point process skills that orchestrate existing skills and agents. P0 safety and approval gates override every recipe.
+
+| Situation | Recipe |
+|---|---|
+| Small/standard single task (feature/fix/refactor/docs/config) | `recipe-task` |
+| Design/specify/scope a medium or large change before code | `recipe-design` |
+| Convert approved docs into an executable task plan | `recipe-plan` |
+| Execute an approved plan task by task | `recipe-build` |
+| Review completed/in-progress work for readiness | `recipe-review` |
+| End-to-end fullstack feature (FastAPI + React + OpenAPI + e2e) | `recipe-fullstack-implement` |
+| Root-cause a bug/failing test/flaky CI before fixing | `recipe-diagnose` |
+| Generate docs from existing code without changing behavior | `recipe-reverse-engineer` |
+| Add high-value integration/E2E tests from acceptance criteria | `recipe-add-integration-tests` |
+
 ## WORKFLOW CHAINS
 
 ### Full-stack feature
