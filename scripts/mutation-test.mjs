@@ -146,6 +146,21 @@ const MUTATIONS = [
       return out;
     },
   },
+  {
+    id: 'm-strip-recipe-build-desc',
+    kind: 'routing',
+    cases: 'recipe-build-approved-plan',
+    describe: 'Strip recipe-build description so "execute the approved plan" no longer routes to it',
+    skill: 'recipe-build',
+    apply: (text) => {
+      // Gut the description: with no signal, "execute this approved implementation
+      // plan" should drift to recipe-plan (which keeps its description) and MISS
+      // recipe-build — proving the recipe routing case is description-sensitive.
+      const out = text.replace(/^description: .*$/m, 'description: A process skill.');
+      if (out === text) throw new Error('recipe-build description not found — no-op mutant');
+      return out;
+    },
+  },
 ];
 
 // Mirrors filterCases in eval/lib.mjs: an unknown id or empty selection exits
