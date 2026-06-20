@@ -63,7 +63,7 @@ fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-be
 recipe-task recipe-design recipe-plan recipe-build recipe-review"
 
 AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward \
-requirements-analyzer codebase-analyzer document-reviewer design-sync"
+requirements-analyzer codebase-analyzer document-reviewer design-sync quality-runner"
 
 # ---------------------------------------------------------------------------
 echo "=== T1: Structure — instructions, ruler config, every skill + agent present ==="
@@ -226,11 +226,14 @@ echo
 echo "=== T10b: Workflow planning agents are read-only sensors with structured output ==="
 # T10 (above) already enforces NO Edit/Write for every AGENT_LIST entry except
 # spec-steward. T10b adds the structured-output contract these planning/sync agents owe.
-for a in requirements-analyzer codebase-analyzer document-reviewer design-sync; do
+for a in requirements-analyzer codebase-analyzer document-reviewer design-sync quality-runner; do
   f="$AGENTS/$a.md"
   assert_true "T10b: $a exists" "test -f '$f'"
   assert_true "T10b: $a emits structured/JSON output" "grep -Eiq 'json|Output format|structured' '$f'"
 done
+# quality-runner is the one workflow agent that executes commands — it MUST keep Bash
+# (still no Edit/Write, asserted by T10 above).
+assert_true "T10b: quality-runner HAS Bash (runs checks)" "agent_has_tool '$AGENTS/quality-runner.md' Bash"
 
 # ---------------------------------------------------------------------------
 echo
