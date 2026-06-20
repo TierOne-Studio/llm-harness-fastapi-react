@@ -58,9 +58,13 @@ react-performance react-routing react-state-management react-testing \
 shadcn tailwind-v4-shadcn vite vitest \
 \
 database-transactions db-write-protocol fastapi-best-practices fastapi-clean-architecture \
-fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts"
+fastapi-patterns fastapi-security fastapi-testing pydantic-v2-patterns python-best-practices python-design-patterns openapi-contracts \
+\
+recipe-task recipe-design recipe-plan recipe-build recipe-review \
+recipe-fullstack-implement recipe-diagnose recipe-reverse-engineer recipe-add-integration-tests"
 
-AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward"
+AGENT_LIST="architect-reviewer code-reviewer qa-validator security-reviewer lessons-curator acceptance-verifier spec-steward \
+requirements-analyzer codebase-analyzer document-reviewer design-sync quality-runner"
 
 # ---------------------------------------------------------------------------
 echo "=== T1: Structure — instructions, ruler config, every skill + agent present ==="
@@ -192,6 +196,19 @@ done
 
 # ---------------------------------------------------------------------------
 echo
+echo "=== T8b: Recipe skills — referenced in instructions, family process, owners present, P0 dominant ==="
+for r in recipe-task recipe-design recipe-plan recipe-build recipe-review \
+         recipe-fullstack-implement recipe-diagnose recipe-reverse-engineer recipe-add-integration-tests; do
+  f="$SKILLS/$r/SKILL.md"
+  assert_true "T8b: $r dir + SKILL.md exists" "test -f '$f'"
+  assert_true "T8b: $r referenced in instructions.md" "grep -q '$r' '$INSTRUCTIONS'"
+  assert_true "T8b: $r has family: process" "grep -q 'family: process' '$f'"
+  assert_true "T8b: $r declares owners" "grep -q 'owners:' '$f'"
+  assert_true "T8b: $r states P0 dominance" "grep -Eiq 'P0 (safety|remains)' '$f'"
+done
+
+# ---------------------------------------------------------------------------
+echo
 echo "=== T9: No stray dev artifacts in the shipped template ==="
 assert_true "T9: no *.bak files under .ruler/" "[ \$(find '$RULER_DIR' -name '*.bak' | wc -l) -eq 0 ]"
 
@@ -205,6 +222,20 @@ for a in $AGENT_LIST; do
   assert_true "T10: '$a' has NO Edit (read-only sensor)" "! agent_has_tool '$AGENTS/$a.md' Edit"
   assert_true "T10: '$a' has NO Write (read-only sensor)" "! agent_has_tool '$AGENTS/$a.md' Write"
 done
+
+# ---------------------------------------------------------------------------
+echo
+echo "=== T10b: Workflow planning agents are read-only sensors with structured output ==="
+# T10 (above) already enforces NO Edit/Write for every AGENT_LIST entry except
+# spec-steward. T10b adds the structured-output contract these planning/sync agents owe.
+for a in requirements-analyzer codebase-analyzer document-reviewer design-sync quality-runner; do
+  f="$AGENTS/$a.md"
+  assert_true "T10b: $a exists" "test -f '$f'"
+  assert_true "T10b: $a emits structured/JSON output" "grep -Eiq 'json|Output format|structured' '$f'"
+done
+# quality-runner is the one workflow agent that executes commands — it MUST keep Bash
+# (still no Edit/Write, asserted by T10 above).
+assert_true "T10b: quality-runner HAS Bash (runs checks)" "agent_has_tool '$AGENTS/quality-runner.md' Bash"
 
 # ---------------------------------------------------------------------------
 echo

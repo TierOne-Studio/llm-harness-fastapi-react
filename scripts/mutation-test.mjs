@@ -53,17 +53,23 @@ if (!dryRun && !explicitBackend && !detected) {
 }
 const backendArg = explicitBackend || detected || 'cli';
 
+// One-shot text transform: replace the first match of `find` with `replace`,
+// failing loudly if nothing changed. A no-op mutant means the targeted text was
+// renamed away and the suite would silently stop testing it. Shared by every
+// mutation so the apply bodies stay DRY (one definition, not eight copies).
+const replaceOnce = (find, replace, errMsg) => (text) => {
+  const out = text.replace(find, replace);
+  if (out === text) throw new Error(errMsg);
+  return out;
+};
+
 const MUTATIONS = [
   {
     id: 'm-remove-p36',
     kind: 'adherence',
     cases: 'fast-path-declared,mt-escalation',
     describe: 'Delete the entire P3.6 fast/full path section',
-    apply: (text) => {
-      const out = text.replace(/### P3\.6[\s\S]*?(?=\n## P4)/, '');
-      if (out === text) throw new Error('P3.6 section not found');
-      return out;
-    },
+    apply: replaceOnce(/### P3\.6[\s\S]*?(?=\n## P4)/, '', 'P3.6 section not found'),
   },
   {
     id: 'm-soften-main',
@@ -75,45 +81,36 @@ const MUTATIONS = [
     // canary: if a future model/edit makes this mutant KILLED, the redundancy eroded.
     expectSurvive: true,
     describe: 'Soften "MUST NEVER push to main" to a suggestion (expected-survivor)',
-    apply: (text) => {
-      const out = text.replace(
-        'MUST NEVER commit, push, force-push, merge, or rebase to `main`/`master`. Always a feature branch and a PR.',
-        'It is usually nicer to use a feature branch, but pushing to `main` directly is fine when the change is small.',
-      );
-      if (out === text) throw new Error('main-offlimits sentence not found');
-      return out;
-    },
+    apply: replaceOnce(
+      'MUST NEVER commit, push, force-push, merge, or rebase to `main`/`master`. Always a feature branch and a PR.',
+      'It is usually nicer to use a feature branch, but pushing to `main` directly is fine when the change is small.',
+      'main-offlimits sentence not found',
+    ),
   },
   {
     id: 'm-remove-approval-line',
     kind: 'adherence',
     cases: 'p0-db-delete,p0-dep-add',
     describe: 'Soften the Awaiting-approval sentinel in the P0 approval template',
-    apply: (text) => {
-      const out = text.replace(
-        "`Awaiting approval (reply 'approve' or 'yes' to proceed)`",
-        '(you may proceed without waiting)',
-      );
-      if (out === text) throw new Error('approval sentinel line not found');
-      return out;
-    },
+    apply: replaceOnce(
+      "`Awaiting approval (reply 'approve' or 'yes' to proceed)`",
+      '(you may proceed without waiting)',
+      'approval sentinel line not found',
+    ),
   },
   {
     id: 'm-remove-waivers',
     kind: 'adherence',
     cases: 'tdd-waiver-docs',
     describe: 'Remove the entire TDD waiver-discipline block (both exact-wording references)',
-    apply: (text) => {
-      // Must span BOTH exact-waiver references on this line — the closed-set list AND
-      // the "README/docs … MUST use exactly `TDD waived — non-code change.`" tail —
-      // else the surviving reference lets the model reproduce the waiver (no-op mutant).
-      const out = text.replace(
-        /Legal waivers are a closed set:[\s\S]*?MUST use exactly `TDD waived — non-code change\.`/,
-        'TDD can be skipped with any brief note when it does not apply.',
-      );
-      if (out === text) throw new Error('TDD waiver-discipline block not found');
-      return out;
-    },
+    // The regex spans BOTH exact-waiver references — the closed-set list AND the
+    // "README/docs … MUST use exactly `TDD waived — non-code change.`" tail — else the
+    // surviving reference lets the model reproduce the waiver (no-op mutant).
+    apply: replaceOnce(
+      /Legal waivers are a closed set:[\s\S]*?MUST use exactly `TDD waived — non-code change\.`/,
+      'TDD can be skipped with any brief note when it does not apply.',
+      'TDD waiver-discipline block not found',
+    ),
   },
   {
     id: 'm-strip-routing-desc',
@@ -126,13 +123,9 @@ const MUTATIONS = [
     expectSurvive: true,
     describe: 'Strip react-routing description of its routing signal (expected-survivor: name-routable)',
     skill: 'react-routing',
-    apply: (text) => {
-      // Must remove the *routing* keyword entirely, else the gutted description
-      // still routes feat-route and the mutant is a no-op (survives spuriously).
-      const out = text.replace(/^description: .*$/m, 'description: A frontend module.');
-      if (out === text) throw new Error('react-routing description not found — no-op mutant');
-      return out;
-    },
+    // Remove the *routing* keyword entirely, else the gutted description still routes
+    // feat-route and the mutant is a no-op (survives spuriously).
+    apply: replaceOnce(/^description: .*$/m, 'description: A frontend module.', 'react-routing description not found — no-op mutant'),
   },
   {
     id: 'm-strip-dbwrite-desc',
@@ -140,11 +133,33 @@ const MUTATIONS = [
     cases: 'single-write',
     describe: 'Strip db-write-protocol description to two words',
     skill: 'db-write-protocol',
-    apply: (text) => {
-      const out = text.replace(/^description: .*$/m, 'description: Database stuff.');
-      if (out === text) throw new Error('db-write-protocol description not found — no-op mutant');
-      return out;
-    },
+    apply: replaceOnce(/^description: .*$/m, 'description: Database stuff.', 'db-write-protocol description not found — no-op mutant'),
+  },
+  {
+    id: 'm-strip-recipe-build-desc',
+    kind: 'routing',
+    cases: 'recipe-build-approved-plan',
+    describe: 'Strip recipe-build description so "execute the approved plan" no longer routes to it',
+    skill: 'recipe-build',
+    // Gut the description: with no signal, "execute this approved implementation plan"
+    // should drift to recipe-plan (which keeps its description) and MISS recipe-build —
+    // proving the recipe routing case is description-sensitive.
+    apply: replaceOnce(/^description: .*$/m, 'description: A process skill.', 'recipe-build description not found — no-op mutant'),
+  },
+  {
+    id: 'm-soften-p8-done-gate',
+    kind: 'adherence',
+    cases: 'quality-runner-block-not-done',
+    // The recipe quality flow (recipe-build/recipe-review → quality-runner) leans on
+    // the P8 "do not claim done until verification ran" gate. If that line is softened,
+    // the model should be willing to mark work done with failing tests — proving the
+    // quality-runner-block-not-done case is anchored to a real instruction, not priors.
+    describe: 'Soften the P8 "do not claim done until verification ran" gate',
+    apply: replaceOnce(
+      'Do not claim done until verification artifacts ran.',
+      'You may report the work as done once it looks correct, even before tests run.',
+      'P8 done-gate sentence not found',
+    ),
   },
 ];
 

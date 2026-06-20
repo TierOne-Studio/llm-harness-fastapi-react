@@ -119,6 +119,8 @@ When fast path escalates mid-task, the next response MUST begin with the exact p
 | 3+ files OR auth/PII/RBAC/payments | `code-reviewer` POST |
 | Same conditions, plus any observable behavior change | `qa-validator` POST |
 | Auth, secrets, PII, RBAC, CORS/CSRF, SQL/injection, uploads, deps, OpenAPI security | `security-reviewer` POST |
+| Cross-tier or OpenAPI/contract/schema change | `design-sync` PRE + POST |
+| Quality evidence (tests/lint/type/build) before final review | `quality-runner` POST |
 | User-facing/API behavior change | `acceptance-verifier` LAST |
 | User correction | `lessons-curator` |
 
@@ -205,6 +207,22 @@ Python: typed public surfaces, Ruff + repo type checker, Pydantic v2 boundary sc
 | Git/GitHub writes (commit/push/branch/PR/merge) | `git-workflow` |
 | Pushing back (simpler alt / scope creep / risk) | `pushback-templates` |
 | CI pipeline / pre-commit / merge gates | `quality-gates` |
+
+## RECIPE POINTERS
+
+Recipes are entry-point process skills that orchestrate existing skills and agents. P0 safety and approval gates override every recipe.
+
+| Situation | Recipe |
+|---|---|
+| Small/standard single task (feature/fix/refactor/docs/config) | `recipe-task` |
+| Design/specify/scope a medium or large change before code | `recipe-design` |
+| Convert approved docs into an executable task plan | `recipe-plan` |
+| Execute an approved plan task by task | `recipe-build` |
+| Review completed/in-progress work for readiness | `recipe-review` |
+| End-to-end fullstack feature (FastAPI + React + OpenAPI + e2e) | `recipe-fullstack-implement` |
+| Root-cause a bug/failing test/flaky CI before fixing | `recipe-diagnose` |
+| Generate docs from existing code without changing behavior | `recipe-reverse-engineer` |
+| Add high-value integration/E2E tests from acceptance criteria | `recipe-add-integration-tests` |
 
 ## WORKFLOW CHAINS
 
