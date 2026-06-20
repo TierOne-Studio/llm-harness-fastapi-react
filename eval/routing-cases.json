@@ -391,14 +391,16 @@
     },
     {
       "id": "recipe-design-medium",
-      "prompt": "Plan and design a medium feature touching the FastAPI API and the React UI before writing any code",
+      "prompt": "Write the design docs and SPEC for this medium cross-tier feature and get them design-reviewed before we plan tasks or write any code",
       "expected": [
         "recipe-design"
       ],
       "allowed": [
         "recipe-plan",
         "plan-mode",
-        "spec-workflow"
+        "spec-workflow",
+        "design-review",
+        "documentation-and-adrs"
       ]
     },
     {
